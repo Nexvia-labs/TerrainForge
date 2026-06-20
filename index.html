@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nexvia</title>
+
+<style>
+body{
+    margin:0;
+    font-family:Arial,sans-serif;
+    background:#0f1117;
+    color:white;
+}
+
+.header{
+    padding:20px;
+    font-size:28px;
+    font-weight:bold;
+}
+
+.sub{
+    padding:0 20px 20px;
+    color:#aaa;
+}
+
+.apps{
+    padding:20px;
+}
+
+.card{
+    width:300px;
+    background:#1b1f2a;
+    border-radius:16px;
+    padding:20px;
+    cursor:pointer;
+    transition:.2s;
+}
+
+.card:hover{
+    transform:translateY(-4px);
+}
+
+.card h2{
+    margin:0;
+}
+
+.card p{
+    color:#bbb;
+}
+
+#viewer{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:#111;
+}
+
+#viewer iframe{
+    width:100%;
+    height:100%;
+    border:none;
+}
+
+.back{
+    position:absolute;
+    top:15px;
+    left:15px;
+    z-index:10;
+    padding:10px 16px;
+    border:none;
+    border-radius:10px;
+    cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div id="home">
+
+<div class="header">NEXVIA</div>
+
+<div class="sub">
+Experimental Projects
+</div>
+
+<div class="apps">
+
+<div class="card" onclick="openApp()">
+<h2>TerrainForge v1.0.0</h2>
+<p>
+Procedural terrain generation and exploration.
+</p>
+</div>
+
+</div>
+
+</div>
+
+<div id="viewer">
+
+<button class="back" onclick="closeApp()">
+← Home
+</button>
+
+<iframe
+src="TerrainForge v1.0.0.html">
+</iframe>
+
+</div>
+
+<script>
+function openApp(){
+    document.getElementById("home").style.display="none";
+    document.getElementById("viewer").style.display="block";
+}
+
+function closeApp(){
+    document.getElementById("viewer").style.display="none";
+    document.getElementById("home").style.display="block";
+}
+</script>
+
+</body>
+  </html>

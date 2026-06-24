@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Math Terrain Editor - Multi-Stamp</title>
+  <title>Math Terrain Editor - Multi-Stamp (Optimized)</title>
   <style>
     body { margin: 0; overflow: hidden; background: #111; font-family: sans-serif; color: white; touch-action: none; }
     
@@ -150,6 +150,9 @@
   
   let placedStamps = []; 
   let baseHeights = new Float32Array(); 
+  let currentGridSize = 200;
+  let currentSegments = 200;
+  let meshNeedsForceUpdate = false;
 
   // OPTIMIZATION: Reusable Math Scope (prevents garbage collection lag)
   const evalScope = {
@@ -192,8 +195,9 @@
 
   function createTerrain(size) {
     if (terrain.geometry) terrain.geometry.dispose();
-    const segments = Math.min(Math.floor(size), 400); 
-    const geometry = new THREE.PlaneGeometry(size, size, segments, segments);
+    currentGridSize = size;
+    currentSegments = Math.min(Math.floor(size), 400); 
+    const geometry = new THREE.PlaneGeometry(size, size, currentSegments, currentSegments);
     geometry.rotateX(-Math.PI / 2);
     
     const vertexCount = geometry.attributes.position.count;
@@ -286,73 +290,99 @@
   // --- THE STAMP RENDERING SYSTEM ---
   function applyStampToVertices(stamp, pos, vertexCount) {
     const posArr = pos.array;
+    const size = currentGridSize;
+    const segments = currentSegments;
+    const vertexPerSide = segments + 1;
     
     let minX = stamp.cx - stamp.radius;
     let maxX = stamp.cx + stamp.radius;
     let minZ = stamp.cz - stamp.radius;
     let maxZ = stamp.cz + stamp.radius;
-    let rSq = stamp.radius * stamp.radius; // Pre-calculated square radius
+    let rSq = stamp.radius * stamp.radius;
 
-    // OPTIMIZATION: Direct memory array reading/writing 
-    for (let i = 0; i < vertexCount; i++) {
-      let i3 = i * 3;
-      let vx = posArr[i3];
-      let vz = posArr[i3 + 2];
+    // OPTIMIZATION: Instead of scanning the entire grid, compute row/col boundaries directly.
+    let minCol = Math.max(0, Math.floor((minX + size / 2) / size * segments));
+    let maxCol = Math.min(segments, Math.ceil((maxX + size / 2) / size * segments));
+    let minRow = Math.max(0, Math.floor((size / 2 - maxZ) / size * segments));
+    let maxRow = Math.min(segments, Math.ceil((size / 2 - minZ) / size * segments));
 
-      if (vx < minX || vx > maxX || vz < minZ || vz > maxZ) continue;
-
-      let dx = vx - stamp.cx;
-      let dz = vz - stamp.cz;
-      let distSq = dx*dx + dz*dz;
-
-      if (distSq < rSq) {
-        let dist = Math.sqrt(distSq);
-        let falloff = 1 - (dist / stamp.radius);
-        falloff = falloff * falloff * (3 - 2 * falloff); 
-
-        // OPTIMIZATION: Reusing global eval scope
-        evalScope.x = vx;
-        evalScope.y = vz;
-        evalScope.t = globalTime;
-        evalScope.d = Math.sqrt(vx*vx + vz*vz);
+    for (let r = minRow; r <= maxRow; r++) {
+      for (let c = minCol; c <= maxCol; c++) {
+        let i = r * vertexPerSide + c;
+        if (i >= vertexCount) continue;
+        let i3 = i * 3;
         
-        let newHeight = stamp.node.evaluate(evalScope);
-        posArr[i3 + 1] += (newHeight * falloff);
+        let vx = posArr[i3];
+        let vz = posArr[i3 + 2];
+
+        let dx = vx - stamp.cx;
+        let dz = vz - stamp.cz;
+        let distSq = dx*dx + dz*dz;
+
+        if (distSq < rSq) {
+          let dist = Math.sqrt(distSq);
+          let falloff = 1 - (dist / stamp.radius);
+          falloff = falloff * falloff * (3 - 2 * falloff); 
+
+          evalScope.x = vx;
+          evalScope.y = vz;
+          evalScope.t = globalTime;
+          evalScope.d = Math.sqrt(vx*vx + vz*vz);
+          
+          let newHeight = stamp.node.evaluate(evalScope);
+          posArr[i3 + 1] += (newHeight * falloff);
+        }
       }
     }
   }
 
+  let lastHitPoint = null;
+
   function applyTerrainLogic() {
     if (!compiledNode || isGPU) return;
     
-    // OPTIMIZATION: Using O(1) Math Plane intersection instead of heavy mesh raycasting
     raycaster.setFromCamera(mouse, camera);
     let hitPoint = raycaster.ray.intersectPlane(groundPlane, new THREE.Vector3());
     
+    let brushMovedOrChanged = false;
     if (hitPoint) {
-      brushCenter.copy(hitPoint);
+      if (!lastHitPoint || !brushCenter.equals(hitPoint)) {
+        brushCenter.copy(hitPoint);
+        brushMovedOrChanged = true;
+      }
       brushRing.position.set(brushCenter.x, brushCenter.y + 0.5, brushCenter.z);
       brushRing.visible = true;
     } else {
+      if (brushRing.visible) brushMovedOrChanged = true;
       brushRing.visible = false;
     }
+    lastHitPoint = hitPoint;
+
+    // Check if any active stamp or preview is dynamic/animated
+    const hasAnimations = placedStamps.length > 0 || (document.getElementById('live-preview').checked && brushRing.visible && eqInput.value.includes('t'));
+
+    // OPTIMIZATION: If nothing is dynamic, the brush hasn't moved, and no structural changes happened, skip pipeline completely
+    if (!hasAnimations && !brushMovedOrChanged && !meshNeedsForceUpdate) {
+      return;
+    }
+    meshNeedsForceUpdate = false;
 
     const geometry = terrain.geometry;
     const pos = geometry.attributes.position;
     const vertexCount = pos.count;
     const posArr = pos.array;
 
-    // 1. Reset everything to baseline heights (0 flat) using direct arrays
+    // 1. Reset array directly to matrix baseHeights
     for(let i=0; i<vertexCount; i++) {
         posArr[i * 3 + 1] = baseHeights[i];
     }
 
-    // 2. Add all previously PLACED equations
+    // 2. Add only dynamic/animated placed stamps
     for (let stamp of placedStamps) {
       applyStampToVertices(stamp, pos, vertexCount);
     }
 
-    // 3. Add the active Live Preview equation
+    // 3. Add live preview stamp
     if (hitPoint && document.getElementById('live-preview').checked) {
       let tempPreviewStamp = {
         node: compiledNode,
@@ -374,17 +404,32 @@
       return;
     }
     if (brushRing.visible && compiledNode) {
-      placedStamps.push({
+      const eqText = eqInput.value;
+      const isAnimated = eqText.includes('t');
+      
+      const newStamp = {
         node: compiledNode,     
         cx: brushCenter.x,      
         cz: brushCenter.z,      
         radius: brushRadius     
-      });
+      };
+
+      if (isAnimated) {
+        placedStamps.push(newStamp);
+      } else {
+        // OPTIMIZATION: Bake static calculations directly into baseline height matrix permanently
+        const geometry = terrain.geometry;
+        const pos = geometry.attributes.position;
+        applyStampToVertices(newStamp, { array: baseHeights }, pos.count);
+      }
+      meshNeedsForceUpdate = true;
     }
   });
 
   document.getElementById('btn-clear').addEventListener('click', () => {
     placedStamps = [];
+    for(let i=0; i<baseHeights.length; i++) baseHeights[i] = 0;
+    meshNeedsForceUpdate = true;
   });
 
   document.getElementById('btn-gpu').addEventListener('click', () => {
@@ -436,6 +481,7 @@
       btn.innerText = "Shift to GPU (Global Shader)";
       btn.style.background = "#ff4757";
       terrain.material = standardMaterial;
+      meshNeedsForceUpdate = true;
     }
   });
 
@@ -443,6 +489,7 @@
     if(e.target.value !== "custom") {
       eqInput.value = e.target.value;
       compileEquation();
+      meshNeedsForceUpdate = true;
     }
   });
 
@@ -451,6 +498,7 @@
     document.getElementById('brush-radius').value = brushRadius;
     document.getElementById('rad-num').value = brushRadius;
     brushRing.scale.set(brushRadius, 1, brushRadius);
+    meshNeedsForceUpdate = true;
   }
   document.getElementById('brush-radius').addEventListener('input', e => syncRadius(e.target.value));
   document.getElementById('rad-num').addEventListener('input', e => syncRadius(e.target.value));

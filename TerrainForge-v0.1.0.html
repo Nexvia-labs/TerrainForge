@@ -1,541 +1,1154 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Math Terrain Editor - Multi-Stamp (Optimized)</title>
-  <style>
-    body { margin: 0; overflow: hidden; background: #111; font-family: sans-serif; color: white; touch-action: none; }
-    
-    #toggle-ui-btn {
-      position: absolute; top: 15px; left: 15px; z-index: 20;
-      background: #58c8f8; color: #000; border: none; border-radius: 4px;
-      width: 40px; height: 40px; font-size: 20px; cursor: pointer;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.5); font-weight: bold;
-    }
-    #toggle-ui-btn:hover { background: #7de8ff; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TerrainForge — Procedural Map Builder</title>
+<link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:rgba(8,18,44,.92);--bg2:rgba(6,14,38,.97);
+  --br:rgba(80,145,255,.22);--brh:rgba(80,145,255,.55);
+  --ac:#58c8f8;--acd:rgba(88,200,248,.65);
+  --go:#eebb55;--god:rgba(238,187,85,.65);
+  --er:#f04466;--ok:#44ddaa;--pu:#c084fc;--gr:#5ef08a;
+  --t1:rgba(230,242,255,.98);--t2:rgba(170,200,235,.88);--t3:rgba(120,160,210,.72);
+  --fd:'Oxanium','Trebuchet MS',sans-serif;
+  --fm:'JetBrains Mono','Courier New',monospace;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:#030c1c;font-family:'IBM Plex Sans',system-ui,sans-serif;
+  color:var(--t1);height:100vh;width:100vw;overflow:hidden;cursor:crosshair;user-select:none}
+canvas{display:block;position:fixed;inset:0;z-index:1}
 
-    #ui {
-      position: absolute; top: 65px; left: 15px; z-index: 10;
-      background: rgba(20, 25, 35, 0.95); padding: 20px; border-radius: 8px;
-      border: 1px solid #445; width: 320px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-      transition: display 0.3s;
-      max-height: 80vh; overflow-y: auto;
-    }
-    
-    h2 { margin: 0 0 15px 0; font-size: 18px; color: #58c8f8; }
-    label { display: flex; justify-content: space-between; align-items: center; font-size: 12px; margin-bottom: 5px; color: #aaa; }
-    input[type="range"] { width: 100%; margin-bottom: 15px; cursor: pointer; }
-    input[type="number"], input[type="text"], select {
-      padding: 6px; background: #000; border: 1px solid #58c8f8;
-      color: #58c8f8; font-family: monospace; border-radius: 4px; box-sizing: border-box;
-    }
-    input[type="number"] { width: 60px; text-align: right; }
-    input[type="text"], select { width: 100%; margin-bottom: 15px; }
-    input:focus, select:focus { outline: none; box-shadow: 0 0 5px rgba(88,200,248,0.5); }
-    
-    .checkbox-container { display: flex; align-items: center; justify-content: flex-start; gap: 10px; margin-bottom: 15px; cursor: pointer;}
-    .checkbox-container input { cursor: pointer; }
+/* LOADING */
+#loading{position:fixed;inset:0;z-index:999;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;background:#030912;gap:14px}
+#loading h2{font-family:var(--fd);font-size:22px;color:var(--ac);letter-spacing:.1em}
+#loading p{font-size:12px;color:var(--t3);font-family:var(--fm)}
+.spin{width:36px;height:36px;border:3px solid rgba(80,145,255,.2);border-top-color:var(--ac);
+  border-radius:50%;animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
 
-    button.action-btn {
-      width: 100%; padding: 10px; background: #58c8f8; color: #000; font-weight: bold;
-      border: none; border-radius: 4px; cursor: pointer; transition: 0.2s; margin-bottom: 10px;
-    }
-    button.action-btn:hover { background: #7de8ff; box-shadow: 0 0 10px rgba(88,200,248,0.4); }
-    button.clear-btn { background: #333; color: white; border: 1px solid #555; }
-    button.clear-btn:hover { background: #444; }
-    button.gpu-btn { background: #ff4757; color: white; border: 1px solid #ff6b81; }
-    button.gpu-btn:hover { background: #ff6b81; box-shadow: 0 0 10px rgba(255,71,87,0.4); }
-    
-    #instructions { 
-      position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); 
-      font-size: 13px; background: rgba(0,0,0,0.75); padding: 10px 20px; 
-      border-radius: 20px; pointer-events: none; text-align: center; line-height: 1.6;
-      border: 1px solid #333;
-    }
-    kbd { background: #222; padding: 3px 6px; border-radius: 4px; border: 1px solid #555; font-size: 11px; color: #58c8f8; }
-    hr { border: 0; border-top: 1px solid #445; margin: 15px 0; }
-  </style>
+/* TOP BAR */
+#viz-topbar{position:fixed;top:0;left:0;right:0;z-index:100;height:46px;
+  display:none;align-items:center;padding:0 12px;gap:8px;
+  background:rgba(4,10,26,.92);backdrop-filter:blur(16px);
+  border-bottom:1px solid rgba(80,145,255,.18)}
+#proj-cur-name{flex:1;font-family:var(--fd);font-size:13px;font-weight:600;
+  color:var(--t1);text-align:center;letter-spacing:.04em}
+
+/* BUTTONS */
+.btn{font-family:var(--fd);font-size:9.5px;font-weight:600;letter-spacing:.07em;
+  text-transform:uppercase;padding:7px 13px;
+  background:rgba(10,22,55,.85);border:1px solid rgba(80,145,255,.3);
+  border-radius:8px;color:var(--t2);cursor:pointer;transition:all .15s;white-space:nowrap}
+.btn:hover{border-color:var(--brh);color:var(--t1);background:rgba(15,30,75,.95)}
+.btn.am{background:rgba(88,200,248,.13);border-color:var(--ac);color:var(--ac)}
+.btn.go{background:rgba(238,187,85,.12);border-color:var(--go);color:var(--go)}
+.btn.gr{background:rgba(94,240,138,.1);border-color:var(--gr);color:var(--gr)}
+.btn.er{background:rgba(240,68,102,.12);border-color:var(--er);color:var(--er)}
+.btn.sm{padding:5px 9px;font-size:8.5px}
+.btn.pu{background:rgba(192,132,252,.1);border-color:var(--pu);color:var(--pu)}
+
+/* TOASTS */
+#toast-box{position:fixed;top:56px;right:14px;z-index:300;
+  display:flex;flex-direction:column;gap:7px;pointer-events:none}
+.toast{background:rgba(4,11,30,.97);backdrop-filter:blur(18px);
+  border:1px solid rgba(238,187,85,.34);border-radius:10px;
+  padding:11px 14px;animation:tin .42s cubic-bezier(.34,1.56,.64,1),tout .35s ease 3.8s forwards;
+  box-shadow:0 6px 28px rgba(0,0,0,.55);pointer-events:auto;max-width:260px}
+.tt{font-family:var(--fd);font-size:10px;font-weight:600;color:var(--go);margin-bottom:3px;letter-spacing:.06em}
+.tb{font-size:10px;color:var(--t2);line-height:1.5}
+@keyframes tin{from{opacity:0;transform:translateX(18px) scale(.94)}to{opacity:1;transform:none}}
+@keyframes tout{from{opacity:1}to{opacity:0;transform:translateY(-8px)}}
+
+/* STATS PANEL */
+#terrain-stats{position:fixed;top:56px;right:14px;z-index:100;width:188px;
+  padding:11px 13px;display:none;flex-direction:column;gap:3px;
+  background:rgba(8,18,44,.9);backdrop-filter:blur(18px);
+  border:1px solid rgba(80,145,255,.22);border-radius:12px}
+.sr{display:flex;justify-content:space-between;align-items:center;line-height:1.8}
+.sl{color:var(--t2);font-size:9px}
+.sv{font-family:var(--fm);font-size:10px;color:var(--t1);font-weight:500}
+.sv.ca{color:var(--ac)}.sv.cg{color:var(--ok)}.sv.cgo{color:var(--go)}.sv.cp{color:var(--pu)}
+.sdiv{height:1px;background:rgba(80,145,255,.15);margin:4px 0}
+
+/* MAIN UI PANEL */
+#terrain-ui{position:fixed;bottom:13px;left:50%;transform:translateX(-50%);
+  width:96%;max-width:1120px;max-height:72vh;overflow-y:auto;
+  background:rgba(6,14,38,.97);backdrop-filter:blur(22px) saturate(1.4);
+  -webkit-backdrop-filter:blur(22px) saturate(1.4);
+  border:1px solid rgba(80,145,255,.25);border-radius:14px;
+  box-shadow:0 -4px 44px rgba(0,0,0,.55);
+  padding:11px 14px 10px;display:none;flex-direction:column;gap:8px;z-index:100;
+  transition:transform .4s cubic-bezier(.4,0,.2,1),opacity .38s}
+#terrain-ui.collapsed{transform:translateX(-50%) translateY(114%);opacity:0;pointer-events:none}
+#terrain-ui::-webkit-scrollbar{width:3px}
+#terrain-ui::-webkit-scrollbar-thumb{background:rgba(80,145,255,.3);border-radius:2px}
+
+/* TAB SYSTEM */
+.tab-row{display:flex;gap:4px;flex-wrap:wrap}
+.tab-btn{font-family:var(--fd);font-size:9px;font-weight:600;letter-spacing:.06em;
+  text-transform:uppercase;padding:5px 11px;background:rgba(10,22,55,.85);
+  border:1px solid rgba(80,145,255,.18);border-radius:6px;color:var(--t3);
+  cursor:pointer;transition:all .15s;white-space:nowrap}
+.tab-btn.active{background:rgba(88,200,248,.13);border-color:var(--ac);color:var(--ac)}
+.tab-btn:hover:not(.active){border-color:var(--brh);color:var(--t2)}
+.tab-pane{display:none;flex-direction:column;gap:7px}
+.tab-pane.active{display:flex}
+
+/* FORM CONTROLS */
+.sg{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.slbl{font-family:var(--fd);font-size:8px;font-weight:600;color:var(--t3);
+  text-transform:uppercase;letter-spacing:.12em;min-width:80px}
+input[type=range]{width:72px;height:3px;accent-color:var(--ac);cursor:pointer;
+  flex-shrink:0}
+.svs{font-family:var(--fm);font-size:9.5px;color:var(--ac);min-width:34px;text-align:right}
+.cr{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.ph{font-family:var(--fd);font-size:8px;font-weight:600;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--t3);padding-bottom:5px;
+  border-bottom:1px solid rgba(80,145,255,.18);margin-bottom:6px}
+.div{height:1px;background:rgba(80,145,255,.15);margin:5px 0}
+
+/* EQUATION INPUT */
+.fw{position:relative;flex:1}
+.fp{position:absolute;left:10px;top:50%;transform:translateY(-50%);
+  font-family:var(--fm);font-size:10px;color:var(--t3);pointer-events:none;z-index:1}
+#terrain-eq{width:100%;padding:10px 12px 10px 56px;font-size:12px;
+  font-family:var(--fm);background:rgba(0,10,28,.75);
+  border:1px solid rgba(80,145,255,.4);color:var(--ac);border-radius:10px;outline:none;
+  transition:border-color .2s}
+#terrain-eq:focus{border-color:var(--ac)}
+#terrain-eq.ie{border-color:var(--er)!important;color:#ff8899!important}
+
+/* PRESET SELECT */
+select{font-family:var(--fd);font-size:9.5px;background:rgba(0,10,28,.85);
+  border:1px solid rgba(80,145,255,.3);color:var(--t2);border-radius:7px;
+  padding:5px 9px;cursor:pointer;outline:none}
+select:hover{border-color:var(--brh)}
+select option{background:#05101e}
+
+/* LAYER ROWS */
+.lay-row{display:flex;align-items:center;gap:5px;background:rgba(0,8,24,.6);
+  border:1px solid rgba(80,145,255,.15);border-radius:8px;padding:6px 9px;flex-wrap:wrap}
+.lay-row input[type=text]{flex:1;min-width:120px;padding:4px 8px;font-family:var(--fm);
+  font-size:10px;background:rgba(0,8,24,.8);border:1px solid rgba(80,145,255,.25);
+  border-radius:5px;color:var(--ac);outline:none}
+.lay-row input[type=text]:focus{border-color:var(--ac)}
+.lay-row input[type=text].ie{border-color:var(--er)!important}
+
+/* TOGGLE SWITCH */
+.tog-wrap{display:flex;align-items:center;gap:6px;cursor:pointer}
+.tog{width:28px;height:15px;background:rgba(80,145,255,.15);border-radius:8px;
+  position:relative;transition:background .2s;border:1px solid rgba(80,145,255,.25);cursor:pointer}
+.tog::after{content:'';position:absolute;top:2px;left:2px;width:9px;height:9px;
+  background:var(--t3);border-radius:50%;transition:transform .2s,background .2s}
+.tog.on{background:rgba(88,200,248,.2);border-color:var(--ac)}
+.tog.on::after{transform:translateX(13px);background:var(--ac)}
+.tog-lbl{font-family:var(--fd);font-size:9px;font-weight:600;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--t3)}
+.tog-wrap:hover .tog-lbl{color:var(--t2)}
+
+/* GEN PROGRESS */
+#gen-progress{position:fixed;top:56px;left:50%;transform:translateX(-50%);
+  z-index:200;background:rgba(4,11,30,.97);backdrop-filter:blur(14px);
+  border:1px solid var(--go);border-radius:10px;padding:10px 18px;
+  display:none;flex-direction:column;gap:5px;min-width:220px;align-items:center}
+#gen-progress h4{font-family:var(--fd);font-size:10px;color:var(--go);letter-spacing:.08em}
+#prog-bar-wrap{width:100%;height:5px;background:rgba(80,145,255,.1);
+  border-radius:3px;overflow:hidden}
+#prog-bar{height:100%;background:linear-gradient(90deg,var(--ac),var(--go));
+  border-radius:3px;width:0%;transition:width .15s}
+#prog-label{font-family:var(--fm);font-size:9px;color:var(--t3)}
+
+/* HOME SCREEN */
+#home-screen{position:fixed;inset:0;z-index:200;
+  background:linear-gradient(160deg,#030c1c 0%,#050e24 60%,#040916 100%);
+  display:flex;flex-direction:column;align-items:center;overflow-y:auto;padding:28px 18px 32px}
+.hs-hero{text-align:center;max-width:560px;margin-bottom:30px;padding-top:8px}
+.hs-hero h1{font-family:var(--fd);font-size:32px;font-weight:700;
+  background:linear-gradient(120deg,var(--ac),#a3f,var(--go));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;letter-spacing:.06em;line-height:1.15}
+.hs-hero p{font-size:13px;color:var(--t3);line-height:1.65;margin-top:9px;max-width:440px}
+.hs-badges{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:12px}
+.badge{font-family:var(--fd);font-size:8px;font-weight:600;letter-spacing:.08em;
+  text-transform:uppercase;padding:4px 10px;border-radius:5px;
+  background:rgba(80,145,255,.08);border:1px solid rgba(80,145,255,.22);color:var(--t3)}
+.hs-new{margin-bottom:22px}
+.hs-new .btn{padding:12px 28px;font-size:11px;letter-spacing:.1em;
+  background:linear-gradient(120deg,rgba(88,200,248,.15),rgba(238,187,85,.1));
+  border-color:rgba(88,200,248,.5)}
+.proj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+  gap:14px;width:100%;max-width:900px}
+.proj-card{background:rgba(8,18,44,.85);border:1px solid rgba(80,145,255,.2);
+  border-radius:12px;overflow:hidden;cursor:pointer;transition:all .2s;
+  box-shadow:0 4px 22px rgba(0,0,0,.5)}
+.proj-card:hover{border-color:rgba(88,200,248,.5);transform:translateY(-2px);
+  box-shadow:0 8px 32px rgba(0,0,0,.65)}
+.proj-thumb{position:relative;height:130px;background:#040c1e;overflow:hidden}
+.proj-thumb img{width:100%;height:100%;object-fit:cover}
+.proj-thumb-placeholder{display:flex;align-items:center;justify-content:center;
+  height:100%;font-size:36px;opacity:.3}
+.proj-thumb-overlay{position:absolute;inset:0;
+  background:linear-gradient(180deg,transparent 55%,rgba(4,10,26,.82))}
+.proj-info{padding:10px 12px 5px}
+.proj-name{font-family:var(--fd);font-size:13px;font-weight:600;color:var(--t1);
+  margin-bottom:5px;text-overflow:ellipsis;overflow:hidden;white-space:nowrap}
+.proj-meta{display:flex;justify-content:space-between;font-size:9px;margin-bottom:2px}
+.proj-meta-lbl{color:var(--t3)}.proj-meta-val{color:var(--t2);font-family:var(--fm)}
+.proj-eq{font-family:var(--fm);font-size:9px;color:var(--t3);margin-top:5px;
+  padding:4px 7px;background:rgba(0,8,24,.6);border-radius:4px;
+  text-overflow:ellipsis;overflow:hidden;white-space:nowrap}
+.proj-actions{display:flex;gap:6px;padding:7px 10px 10px;align-items:center}
+.proj-open{flex:1;font-family:var(--fd);font-size:9.5px;font-weight:600;
+  text-transform:uppercase;letter-spacing:.06em;padding:7px;
+  background:rgba(88,200,248,.1);border:1px solid rgba(88,200,248,.3);
+  border-radius:7px;color:var(--ac);cursor:pointer;transition:all .15s}
+.proj-open:hover{background:rgba(88,200,248,.2)}
+.proj-del{padding:7px 11px;background:rgba(240,68,102,.08);border:1px solid rgba(240,68,102,.25);
+  border-radius:7px;color:var(--er);cursor:pointer;font-size:12px;transition:all .15s}
+.proj-del:hover{background:rgba(240,68,102,.18)}
+.empty-state{grid-column:1/-1;text-align:center;padding:40px 20px;opacity:.7}
+.empty-icon{font-size:42px;margin-bottom:12px}
+.empty-state h3{font-family:var(--fd);font-size:15px;color:var(--t2);margin-bottom:6px}
+.empty-state p{font-size:11px;color:var(--t3);line-height:1.6;max-width:280px;margin:0 auto}
+.hs-proj-title{font-family:var(--fd);font-size:13px;font-weight:600;color:var(--t2);
+  margin-bottom:10px;display:flex;gap:8px;align-items:center}
+.proj-count-badge{font-family:var(--fm);font-size:9.5px;padding:2px 8px;
+  background:rgba(80,145,255,.1);border:1px solid rgba(80,145,255,.2);
+  border-radius:4px;color:var(--ac)}
+
+/* SAVE MODAL */
+#save-modal{position:fixed;inset:0;z-index:500;
+  background:rgba(2,7,20,.82);backdrop-filter:blur(8px);
+  display:none;align-items:center;justify-content:center}
+#save-modal.open{display:flex}
+.modal-box{background:rgba(8,20,52,.98);border:1px solid rgba(80,145,255,.4);
+  border-radius:16px;padding:22px 24px;width:min(360px,90vw);
+  box-shadow:0 16px 56px rgba(0,0,0,.75)}
+.modal-box h3{font-family:var(--fd);font-size:15px;font-weight:600;
+  color:var(--t1);margin-bottom:14px;letter-spacing:.04em}
+.modal-box input{width:100%;padding:10px 13px;font-family:var(--fm);font-size:12px;
+  background:rgba(0,10,28,.8);border:1px solid rgba(80,145,255,.35);
+  color:var(--t1);border-radius:9px;outline:none;margin-bottom:14px}
+.modal-box input:focus{border-color:var(--ac)}
+.modal-btns{display:flex;gap:8px;justify-content:flex-end}
+
+/* TOGGLE BUTTON */
+#utog{position:fixed;bottom:13px;right:14px;z-index:101;padding:9px 12px;
+  font-size:13px;display:none}
+</style>
 </head>
 <body>
 
-<button id="toggle-ui-btn" title="Toggle Panel">â˜°</button>
-
-<div id="ui">
-  <h2>Terrain Brush Tools</h2>
-  
-  <label>
-    <span>Brush Radius:</span>
-    <input type="number" id="rad-num" min="2" max="100" value="30">
-  </label>
-  <input type="range" id="brush-radius" min="2" max="100" value="30">
-  
-  <label style="margin-bottom: 8px;">Presets:</label>
-  <select id="preset-select">
-    <option value="custom">Custom...</option>
-    <option value="(sin(x*0.2+t)+sin(y*0.2-t))*5">Wave (Animate)</option>
-    <option value="sin(sqrt(x*x+y*y)*0.5 - t)*10">Ripple (Animate)</option>
-    <option value="fbm(x*0.05,y*0.05,4)*20">Mountains (Static)</option>
-    <option value="tan(sin(x*0.1 * y*0.1))*5">Chaos (Static)</option>
-  </select>
-
-  <label style="margin-bottom: 8px;">Additive Height Equation:</label>
-  <input type="text" id="equation" value="(sin(x*0.2+t)+sin(y*0.2-t))*5">
-  
-  <label class="checkbox-container">
-    <input type="checkbox" id="live-preview" checked>
-    <span>Live Brush Preview</span>
-  </label>
-
-  <button id="btn-apply" class="action-btn">PLACE (Stamp Equation)</button>
-  <button id="btn-clear" class="action-btn clear-btn">Clear All Stamps</button>
-
-  <hr>
-  
-  <button id="btn-gpu" class="action-btn gpu-btn">Shift to GPU (Global Shader)</button>
-  <div style="font-size: 11px; color:#aaa; margin-bottom: 10px; text-align: center;">Overrides local placed stamps</div>
-
-  <hr>
-
-  <label>
-    <span>Grid Size (Area):</span>
-    <input type="number" id="grid-size" min="50" max="1000" value="200" step="50">
-  </label>
-  <button id="btn-resize" class="action-btn" style="margin-bottom: 0;">Update Grid Size</button>
+<div id="loading">
+  <div class="spin"></div>
+  <h2>TerrainForge</h2>
+  <p>Initialising procedural engine…</p>
 </div>
 
-<div id="instructions">
-  <kbd>Left Click + Drag</kbd> Rotate | <kbd>Right Click + Drag</kbd> Pan | <kbd>Scroll</kbd> Zoom<br>
-  Hover to preview an equation. Click "PLACE" to lock it down, then select a new one!
+<div id="viz-topbar">
+  <button class="btn sm" id="btn-back-home"> Home</button>
+  <span id="proj-cur-name">Unsaved Map</span>
+  <button class="btn sm go" id="btn-regen"> Generate</button>
+  <button class="btn sm" id="btn-save-proj"> Save</button>
+</div>
+
+<div id="terrain-stats">
+  <div class="sr"><span class="sl">Peak Height</span><span class="sv ca" id="s-peak">—</span></div>
+</div>
+
+<div id="gen-progress">
+  <h4> Building Terrain…</h4>
+  <div id="prog-bar-wrap"><div id="prog-bar"></div></div>
+  <div id="prog-label">Initialising heightmap…</div>
+</div>
+
+<div id="toast-box"></div>
+
+<button class="btn" id="utog"></button>
+
+<div id="terrain-ui">
+  <div class="tab-row">
+    <button class="tab-btn active" data-tab="terrain"> Terrain</button>
+    <button class="tab-btn" data-tab="layers"> Layers</button>
+  </div>
+
+  <div class="tab-pane active" id="tab-terrain">
+    <div class="ph">Heightmap Equation</div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <div class="fw">
+        <span class="fp">h(x,y)=</span>
+        <input id="terrain-eq" type="text" value="fbm(x,y,6)*3 + ridge(x,y)*1.5" placeholder="fbm(x,y,6)*3 ...">
+      </div>
+      <select id="preset-sel">
+        <option value="">— Presets —</option>
+        <option value="fbm(x,y,6)*3 + ridge(x,y)*1.5"> Mountain Range</option>
+        <option value="fbm(x,y,4)*2"> Rolling Hills</option>
+        <option value="fbm(x*0.5,y*0.5,8)*4 - 0.5"> High Plateau</option>
+        <option value="island(x,y,3.5)"> Tropical Island</option>
+        <option value="canyon(x,y)"> Canyon Lands</option>
+        <option value="volcano(x,y)"> Volcano</option>
+        <option value="fjord(x,y)"> Fjord Coast</option>
+        <option value="mesa(x,y)"> Desert Mesa</option>
+        <option value="archipelago(x,y)"> Archipelago</option>
+        <option value="plains(x,y)"> Flat Plains</option>
+      </select>
+    </div>
+    <div class="div"></div>
+    <div class="cr">
+      <div class="sg"><span class="slbl">Scale</span>
+        <input type="range" id="sl-scale" min="0.3" max="4" step="0.05" value="1">
+        <span class="svs" id="v-scale">1.00</span></div>
+      <div class="sg"><span class="slbl">Height Amp</span>
+        <input type="range" id="sl-amp" min="0.2" max="6" step="0.1" value="2">
+        <span class="svs" id="v-amp">2.0</span></div>
+      <div class="sg"><span class="slbl">fBm Octaves</span>
+        <input type="range" id="sl-oct" min="1" max="10" step="1" value="6">
+        <span class="svs" id="v-oct">6</span></div>
+      <div class="sg"><span class="slbl">Roughness</span>
+        <input type="range" id="sl-rough" min="0" max="1" step="0.02" value="0.5">
+        <span class="svs" id="v-rough">0.50</span></div>
+      <div class="sg"><span class="slbl">Resolution</span>
+        <input type="range" id="sl-res" min="64" max="256" step="32" value="128">
+        <span class="svs" id="v-res">128</span></div>
+      <div class="sg"><span class="slbl">Erosion</span>
+        <input type="range" id="sl-ero" min="0" max="1" step="0.01" value="0">
+        <span class="svs" id="v-ero">0.00</span></div>
+    </div>
+    <div class="cr" style="margin-top:4px">
+      <div class="tog-wrap" id="tog-wire"><div class="tog" id="tw-tog"></div><span class="tog-lbl">Wireframe</span></div>
+      <div class="tog-wrap" id="tog-normals"><div class="tog" id="tn-tog"></div><span class="tog-lbl">Show Normals</span></div>
+      <div class="tog-wrap" id="tog-flat"><div class="tog" id="tf-tog"></div><span class="tog-lbl">Flat Shade</span></div>
+      <div class="tog-wrap" id="tog-cam"><div class="tog" id="tc-tog" class="on"></div><span class="tog-lbl">Auto Rotate</span></div>
+    </div>
+  </div>
+
+  <div class="tab-pane" id="tab-layers">
+    <div class="ph">Mathematical Layers (composited on top of base heightmap)</div>
+    <div id="lay-con"></div>
+    <div class="cr" style="margin-top:4px">
+      <button class="btn sm" id="b-lay">+ Add Layer</button>
+      <button class="btn sm" id="b-lay-clr"> Clear All</button>
+    </div>
+  </div>
+</div>
+
+<div id="home-screen">
+  <div class="hs-hero">
+    <h1> TerrainForge</h1>
+    <p>Build procedural 3D maps using mathematical equations — mountains, rivers, forests, and more. Powered by fBm noise and GPU shaders.</p>
+    <div class="hs-badges">
+      <span class="badge">fBm Heightmaps</span>
+      <span class="badge">Equation Layers</span>
+    </div>
+  </div>
+  <div class="hs-new">
+    <button class="btn" id="btn-new-proj">+ Create New Map</button>
+  </div>
+  <div class="hs-proj-title">
+    Saved Maps <span class="proj-count-badge" id="hs-proj-count">0</span>
+  </div>
+  <div class="proj-grid" id="proj-grid"></div>
+</div>
+
+<div id="save-modal">
+  <div class="modal-box">
+    <h3> Save Map</h3>
+    <input id="proj-name-inp" type="text" placeholder="Map name…" maxlength="60">
+    <div class="modal-btns">
+      <button class="btn er sm" id="save-cancel">Cancel</button>
+      <button class="btn go sm" id="save-confirm">Save</button>
+    </div>
+  </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/mathjs@11.8.0/lib/browser/math.js"></script>
-
 <script>
-  // --- CORE MATH & NOISE ---
-  const perm = new Uint8Array(512);
-  const g3 = [[1,1],[-1,1],[1,-1],[-1,-1],[1,0],[-1,0],[1,0],[-1,0],[0,1],[0,-1],[0,1],[0,-1]];
-  (function(){
-    let p = []; for(let i=0; i<256; i++) p[i] = i;
-    for(let i=255; i>0; i--){ let j=0|Math.random()*(i+1); let t=p[i]; p[i]=p[j]; p[j]=t; }
-    for(let i=0; i<512; i++) perm[i] = p[i&255];
-  })();
-  function dt(g, x, y) { return g[0]*x + g[1]*y; }
-  function sn(xi, yi) {
-    let F = 0.5 * (1.732051 - 1), G = (3 - 1.732051) / 6;
-    let s = (xi + yi) * F, i = 0 | xi + s, j = 0 | yi + s;
-    let t = (i + j) * G, x0 = xi - (i - t), y0 = yi - (j - t);
-    let i1 = x0 > y0 ? 1 : 0, j1 = 1 - i1;
-    let x1 = x0 - i1 + G, y1 = y0 - j1 + G, x2 = x0 - 1 + 2 * G, y2 = y0 - 1 + 2 * G;
-    let ii = i & 255, jj = j & 255;
-    let g0 = perm[ii + perm[jj]] % 12, g1 = perm[ii + i1 + perm[jj + j1]] % 12, g2 = perm[ii + 1 + perm[jj + 1]] % 12;
-    let n0 = 0, n1 = 0, n2 = 0, tt;
-    tt = 0.5 - x0 * x0 - y0 * y0; if (tt > 0) { tt *= tt; n0 = tt * tt * dt(g3[g0], x0, y0); }
-    tt = 0.5 - x1 * x1 - y1 * y1; if (tt > 0) { tt *= tt; n1 = tt * tt * dt(g3[g1], x1, y1); }
-    tt = 0.5 - x2 * x2 - y2 * y2; if (tt > 0) { tt *= tt; n2 = tt * tt * dt(g3[g2], x2, y2); }
-    return 70 * (n0 + n1 + n2);
-  }
-  function fbmN(x, y, oct) {
-    let v = 0, a = 1, f = 1, mx = 0, o = Math.max(1, Math.min(8, 0 | oct || 4));
-    for (let i = 0; i < o; i++) { v += a * sn(x * f, y * f); mx += a; a *= 0.5; f *= 2; }
-    return v / mx;
-  }
+// 
+// TERRAINFORGE — Procedural 3D Map Builder
+// Architecture: fBm Heightmap  GPU Mesh
+// 
 
-  // --- GLOBALS & STATE ---
-  let globalTime = 0;
-  let isGPU = false; 
-  let compiledNode = null;
-  let previewTimeout = null;
-  
-  let placedStamps = []; 
-  let baseHeights = new Float32Array(); 
-  let currentGridSize = 200;
-  let currentSegments = 200;
-  let meshNeedsForceUpdate = false;
+var $ = function(id){ return document.getElementById(id); };
 
-  // OPTIMIZATION: Reusable Math Scope (prevents garbage collection lag)
-  const evalScope = {
-      x: 0, y: 0, t: 0, d: 0,
-      noise: sn, fbm: fbmN,
-      pi: Math.PI, e: Math.E, sin: Math.sin, cos: Math.cos, tan: Math.tan, sqrt: Math.sqrt
+//  SIMPLEX NOISE (self-contained, no external dep) 
+var SimplexNoise = (function(){
+  function SimplexNoise(seed){
+    seed = seed || 0;
+    this.p = new Uint8Array(256);
+    this.perm = new Uint8Array(512);
+    this.permMod12 = new Uint8Array(512);
+    for(var i=0;i<256;i++) this.p[i]=i;
+    // Seeded shuffle
+    for(var i=255;i>0;i--){
+      seed = (seed * 1664525 + 1013904223) & 0xffffffff;
+      var j = ((seed >>> 16) & 0x7fff) % (i+1);
+      var tmp = this.p[i]; this.p[i]=this.p[j]; this.p[j]=tmp;
+    }
+    for(var i=0;i<512;i++){
+      this.perm[i]=this.p[i&255];
+      this.permMod12[i]=this.perm[i]%12;
+    }
+  }
+  var G2=0.2113248654051871,G3=1/6;
+  var grad3=new Int8Array([1,1,0,-1,1,0,1,-1,0,-1,-1,0,1,0,1,-1,0,1,1,0,-1,-1,0,-1,0,1,1,0,-1,1,0,1,-1,0,-1,1]);
+  SimplexNoise.prototype.noise2D=function(xin,yin){
+    var perm=this.perm,permMod12=this.permMod12;
+    var n0,n1,n2,s=(xin+yin)*0.3660254037844386,i=Math.floor(xin+s),j=Math.floor(yin+s);
+    var t=(i+j)*G2,X0=i-t,Y0=j-t,x0=xin-X0,y0=yin-Y0;
+    var i1,j1;if(x0>y0){i1=1;j1=0;}else{i1=0;j1=1;}
+    var x1=x0-i1+G2,y1=y0-j1+G2,x2=x0-1+2*G2,y2=y0-1+2*G2;
+    var ii=i&255,jj=j&255;
+    var gi0=permMod12[ii+perm[jj]]*3;
+    var gi1=permMod12[ii+i1+perm[jj+j1]]*3;
+    var gi2=permMod12[ii+1+perm[jj+1]]*3;
+    var t0=0.5-x0*x0-y0*y0;
+    if(t0<0)n0=0;else{t0*=t0;n0=t0*t0*(grad3[gi0]*x0+grad3[gi0+1]*y0);}
+    var t1=0.5-x1*x1-y1*y1;
+    if(t1<0)n1=0;else{t1*=t1;n1=t1*t1*(grad3[gi1]*x1+grad3[gi1+1]*y1);}
+    var t2=0.5-x2*x2-y2*y2;
+    if(t2<0)n2=0;else{t2*=t2;n2=t2*t2*(grad3[gi2]*x2+grad3[gi2+1]*y2);}
+    return 70*(n0+n1+n2);
   };
+  return SimplexNoise;
+})();
 
-  // OPTIMIZATION: Mathematical plane for O(1) Raycasting
-  const groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+//  THREE.JS SETUP 
+var renderer, camera, scene;
+var terrainMesh;
+var orb = { theta:-2.2, phi:1.0, radius:32, dragging:false, autoRotate:true };
+var _mx=0,_my=0,_bx=0,_by=0;
 
-  // --- SCENE SETUP ---
-  const scene = new THREE.Scene();
-  scene.fog = new THREE.FogExp2(0x111111, 0.003);
-  const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 2000);
-  camera.position.set(0, 50, 80);
-
-  const renderer = new THREE.WebGLRenderer({ antialias: true });
-  renderer.setSize(window.innerWidth, window.innerHeight);
+function initThree(){
+  renderer = new THREE.WebGLRenderer({antialias:true, preserveDrawingBuffer:true, alpha:false});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  renderer.setSize(window.innerWidth,window.innerHeight);
+  renderer.shadowMap.enabled = true;
   document.body.appendChild(renderer.domElement);
+  renderer.domElement.style.zIndex='1';
 
-  const controls = new THREE.OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true;
-  controls.dampingFactor = 0.05;
-  controls.maxPolarAngle = Math.PI / 2 - 0.05;
+  camera = new THREE.PerspectiveCamera(55, window.innerWidth/window.innerHeight, 0.1, 600);
+  applyCam();
 
-  document.getElementById('ui').addEventListener('pointerdown', e => e.stopPropagation());
-  document.getElementById('toggle-ui-btn').addEventListener('pointerdown', e => e.stopPropagation());
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x080e1e);
+  scene.fog = new THREE.FogExp2(0x080e1e, 0.018);
 
-  scene.add(new THREE.AmbientLight(0x404040, 2));
-  const dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
-  dirLight.position.set(50, 100, 50);
-  scene.add(dirLight);
+  // Lights
+  var amb = new THREE.AmbientLight(0x334466, 1.2); scene.add(amb);
+  var sun = new THREE.DirectionalLight(0xfff5dd, 2.2);
+  sun.position.set(18,28,16); sun.castShadow=true; scene.add(sun);
+  var fill = new THREE.DirectionalLight(0x4488cc, 0.4);
+  fill.position.set(-12,8,-20); scene.add(fill);
 
-  // --- TERRAIN GEOMETRY ---
-  let standardMaterial = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.8, metalness: 0.1 });
-  let gpuMaterial = null; 
-  let terrain = new THREE.Mesh(new THREE.BufferGeometry(), standardMaterial);
-  scene.add(terrain);
-
-  function createTerrain(size) {
-    if (terrain.geometry) terrain.geometry.dispose();
-    currentGridSize = size;
-    currentSegments = Math.min(Math.floor(size), 400); 
-    const geometry = new THREE.PlaneGeometry(size, size, currentSegments, currentSegments);
-    geometry.rotateX(-Math.PI / 2);
-    
-    const vertexCount = geometry.attributes.position.count;
-    baseHeights = new Float32Array(vertexCount);
-    for(let i=0; i<vertexCount; i++) baseHeights[i] = 0; 
-    
-    placedStamps = [];
-
-    geometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(vertexCount * 3), 3));
-    terrain.geometry = geometry;
-    updateColors();
-  }
-
-  // --- BRUSH & RAYCASTING ---
-  const raycaster = new THREE.Raycaster();
-  const mouse = new THREE.Vector2(-2, -2); 
-  let brushCenter = new THREE.Vector3();
-  let brushRadius = 30;
-
-  const brushRing = new THREE.Mesh(
-    new THREE.RingGeometry(0.95, 1.05, 64).rotateX(-Math.PI / 2),
-    new THREE.MeshBasicMaterial({ color: 0x58c8f8, side: THREE.DoubleSide, transparent: true, opacity: 0.8 })
-  );
-  brushRing.position.y = 0.5;
-  scene.add(brushRing);
-
-  window.addEventListener('pointermove', (e) => {
-    if (e.target.closest('#ui') || e.target.closest('#toggle-ui-btn')) return; 
-    mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-    mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+  // Orbit controls (manual)
+  var el = renderer.domElement;
+  el.addEventListener('mousedown',function(e){
+    orb.dragging=true;orb.autoRotate=false;_mx=e.clientX;_my=e.clientY;
+    tcTogOff();
   });
+  window.addEventListener('mouseup',function(){orb.dragging=false;});
+  window.addEventListener('mousemove',function(e){
+    if(!orb.dragging)return;
+    orb.theta-=(e.clientX-_mx)*.007;
+    orb.phi = Math.max(.15,Math.min(1.45,orb.phi+(e.clientY-_my)*.005));
+    _mx=e.clientX;_my=e.clientY;applyCam();
+  });
+  el.addEventListener('touchstart',function(e){
+    orb.dragging=true;orb.autoRotate=false;tcTogOff();
+    _bx=e.touches[0].clientX;_by=e.touches[0].clientY;
+  },{passive:true});
+  window.addEventListener('touchend',function(){orb.dragging=false;});
+  window.addEventListener('touchmove',function(e){
+    if(!orb.dragging)return;
+    orb.theta-=(e.touches[0].clientX-_bx)*.007;
+    orb.phi = Math.max(.15,Math.min(1.45,orb.phi+(e.touches[0].clientY-_by)*.005));
+    _bx=e.touches[0].clientX;_by=e.touches[0].clientY;applyCam();
+  },{passive:true});
+  el.addEventListener('wheel',function(e){
+    orb.radius = Math.max(8,Math.min(80,orb.radius+e.deltaY*.04));
+    applyCam();
+  },{passive:true});
+  window.addEventListener('resize',function(){
+    camera.aspect=window.innerWidth/window.innerHeight;camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth,window.innerHeight);
+  });
+}
+function applyCam(){
+  var sp=Math.sin(orb.phi),cp=Math.cos(orb.phi);
+  var st=Math.sin(orb.theta),ct=Math.cos(orb.theta);
+  camera.position.set(orb.radius*sp*st, orb.radius*cp, orb.radius*sp*ct);
+  camera.lookAt(0,0,0);
+}
+function tcTogOff(){
+  orb.autoRotate=false;
+  var t=$('tc-tog');if(t)t.classList.remove('on');
+}
 
-  // --- COLORING ---
-  const cWater = new THREE.Color(0x1e90ff);
-  const cSand = new THREE.Color(0xeedd82);
-  const cGrass = new THREE.Color(0x3cb371);
-  const cRock = new THREE.Color(0x555555);
-  const cSnow = new THREE.Color(0xffffff);
+//  STATE 
+var STATE = {
+  eq: 'fbm(x,y,6)*3 + ridge(x,y)*1.5',
+  scale: 1.0, amp: 2.0, oct: 6, rough: 0.5,
+  res: 128, erosion: 0.0,
+  wireframe:false, flatShade:false,
+  seed: 42, layers: [],
+  autoRotate: true
+};
 
-  function updateColors() {
-    if (isGPU) return; 
-    const geometry = terrain.geometry;
-    geometry.computeVertexNormals(); 
-    
-    const posArr = geometry.attributes.position.array;
-    const normArr = geometry.attributes.normal.array;
-    const colArr = geometry.attributes.color.array;
-    const vertexCount = geometry.attributes.position.count;
-    
-    // OPTIMIZATION: Direct array manipulation
-    for (let i = 0; i < vertexCount; i++) {
-      let i3 = i * 3;
-      let y = posArr[i3 + 1];
-      let slope = 1.0 - normArr[i3 + 1];
+var gNoise = new SimplexNoise(42);
+var gTime = 0;
+var heightCache = null; 
+var zMin=0,zMax=1;
 
-      let r, g, b;
-      if (y < -2) { r = cWater.r; g = cWater.g; b = cWater.b; }
-      else if (slope > 0.45 && y > 0) { r = cRock.r; g = cRock.g; b = cRock.b; } 
-      else if (y < 1) { r = cSand.r; g = cSand.g; b = cSand.b; }
-      else if (y > 25) { r = cSnow.r; g = cSnow.g; b = cSnow.b; } 
-      else { r = cGrass.r; g = cGrass.g; b = cGrass.b; }
+//  NOISE LIBRARY 
+function sn(x,y){ return gNoise.noise2D(x,y); }
 
-      colArr[i3] = r;
-      colArr[i3 + 1] = g;
-      colArr[i3 + 2] = b;
-    }
-    geometry.attributes.color.needsUpdate = true;
+function fbmN(x,y,oct,rough){
+  oct = oct||6; rough = rough||STATE.rough;
+  var val=0,amp=0.5,freq=1,max=0;
+  for(var i=0;i<oct;i++){
+    val += sn(x*freq,y*freq)*amp;
+    max += amp; amp*=rough; freq*=2.0;
   }
+  return val/max;
+}
+function ridgeN(x,y){
+  var val=0,amp=0.5,freq=1,max=0;
+  for(var i=0;i<6;i++){
+    var v=1-Math.abs(sn(x*freq,y*freq));
+    v=v*v; val+=v*amp; max+=amp; amp*=0.5; freq*=2;
+  }
+  return val/max;
+}
+function domWarp(x,y,s){
+  var wx=x+s*sn(x+1.7,y+9.2);
+  var wy=y+s*sn(x+8.3,y+2.8);
+  return sn(wx,wy);
+}
 
-  // --- EQUATION COMPILATION ---
-  const eqInput = document.getElementById('equation');
-  
-  function compileEquation() {
+//  BUILTIN MAP GENERATORS 
+var _builtins = {
+  island: function(x,y,r){
+    r=r||3.5;
+    var d=Math.sqrt(x*x+y*y);
+    var mask=Math.max(0,1-d/r);
+    mask=mask*mask*(3-2*mask);
+    return fbmN(x,y,6)*2.5*mask-(1-mask)*0.5;
+  },
+  canyon: function(x,y){
+    var base=fbmN(x*0.5,y*0.5,5)*3;
+    var cut=Math.abs(sn(x*0.8,y*0.3+10))*2.5;
+    return Math.max(0,base-cut);
+  },
+  volcano: function(x,y){
+    var d=Math.sqrt(x*x+y*y);
+    var cone=Math.max(0,2-d)*1.4;
+    var crater=d<0.8?-1.5+d*2:0;
+    return cone+crater+fbmN(x,y,4)*0.4;
+  },
+  fjord: function(x,y){
+    var base=fbmN(x*0.7,y*0.7,6)*3;
+    var cut=Math.max(0,1.5-Math.abs(sn(x*0.4,y*0.2)*3))*1.8;
+    return base-cut;
+  },
+  mesa: function(x,y){
+    var h=fbmN(x*0.6,y*0.6,4)*2.5;
+    return Math.floor(h*4)/4+fbmN(x*3,y*3,2)*0.15;
+  },
+  archipelago: function(x,y){
+    return sn(x*0.4,y*0.4)*3+fbmN(x,y,5)*1.5-0.8;
+  },
+  plains: function(x,y){
+    return fbmN(x*0.5,y*0.5,3)*0.6+fbmN(x*2,y*2,2)*0.15;
+  }
+};
+
+function getEquationFn(eq){
+  var fn;
+  try {
+    fn = new Function(
+      'x','y','t',
+      'sin','cos','tan','abs','sqrt','pow','floor','ceil','round','max','min','log','exp','PI',
+      'fbm','ridge','noise','dist','warp',
+      'island','canyon','volcano','fjord','mesa','archipelago','plains',
+      'return (' + eq + ');'
+    );
+  } catch(e) {
+    return function(){ return 0; };
+  }
+  return function(x, y, t) {
     try {
-      let eqStr = eqInput.value.replace(/Math\./g, '');
-      compiledNode = math.compile(eqStr);
-      eqInput.style.borderColor = "#58c8f8";
-    } catch (err) {
-      compiledNode = null;
-      eqInput.style.borderColor = "#ff4757"; 
+      return fn(
+        x, y, t||0,
+        Math.sin, Math.cos, Math.tan, Math.abs, Math.sqrt, Math.pow,
+        Math.floor, Math.ceil, Math.round, Math.max, Math.min, Math.log, Math.exp, Math.PI,
+        function(a,b,o,r){ return fbmN(a,b,o,r); },
+        function(a,b){ return ridgeN(a,b); },
+        function(a,b){ return sn(a,b); },
+        function(a,b,cx,cy){ return Math.sqrt(Math.pow(a-(cx||0),2)+Math.pow(b-(cy||0),2)); },
+        function(a,b,s){ return domWarp(a,b,s||0.8); },
+        _builtins.island, _builtins.canyon, _builtins.volcano,
+        _builtins.fjord, _builtins.mesa, _builtins.archipelago, _builtins.plains
+      );
+    } catch(e) { return 0; }
+  };
+}
+
+//  HEIGHTMAP GENERATION 
+var SURF = 20;
+
+function buildHeightmap(){
+  var res = STATE.res;
+  var GRID = res+1;
+  var VC = GRID*GRID;
+  var eq = getEquationFn(STATE.eq);
+  var scl = STATE.scale, amp = STATE.amp;
+  var hmap = new Float32Array(VC);
+  var s = SURF/res;
+
+  for(var j=0;j<GRID;j++){
+    for(var i=0;i<GRID;i++){
+      var wx=(i-res/2)*s*scl, wy=(j-res/2)*s*scl;
+      var h=eq(wx,wy,0)*amp;
+      for(var li=0;li<STATE.layers.length;li++){
+        var lay=STATE.layers[li];
+        if(!lay.on||!lay.fn)continue;
+        var lh=lay.fn(wx,wy,0)*lay.op;
+        if(lay.blend==='add')h+=lh;
+        else if(lay.blend==='multiply')h*=(1+lh*.3);
+        else if(lay.blend==='subtract')h-=lh;
+        else if(lay.blend==='replace')h=h*(1-lay.op)+lay.fn(wx,wy,0)*lay.op;
+      }
+      hmap[j*GRID+i]=h;
     }
   }
+  if(STATE.erosion>0.01) hmap=erode(hmap,GRID,STATE.erosion);
+  
+  zMin=Infinity; zMax=-Infinity;
+  for(var i=0;i<VC;i++){if(hmap[i]<zMin)zMin=hmap[i];if(hmap[i]>zMax)zMax=hmap[i];}
+  return{hmap:hmap,GRID:GRID,s:s};
+}
 
-  eqInput.addEventListener('input', () => {
-    clearTimeout(previewTimeout);
-    previewTimeout = setTimeout(compileEquation, 300);
+function erode(hmap,G,str){
+  var out=new Float32Array(hmap.length);
+  for(var j=0;j<G;j++){
+    for(var i=0;i<G;i++){
+      var c=hmap[j*G+i];
+      var n=j>0?hmap[(j-1)*G+i]:c;
+      var s2=j<G-1?hmap[(j+1)*G+i]:c;
+      var ww=i>0?hmap[j*G+i-1]:c;
+      var e=i<G-1?hmap[j*G+i+1]:c;
+      var laplace=(n+s2+ww+e-4*c)*.25;
+      out[j*G+i]=c+laplace*str*.3;
+    }
+  }
+  return out;
+}
+
+//  BUILD TERRAIN MESH 
+function buildTerrainMesh(data){
+  if(terrainMesh){scene.remove(terrainMesh);terrainMesh.geometry.dispose();terrainMesh.material.dispose();}
+  var hmap=data.hmap, GRID=data.GRID, s=data.s;
+  var res=GRID-1;
+  var geo=new THREE.BufferGeometry();
+  var VC=GRID*GRID;
+  var pos=new Float32Array(VC*3);
+  var uv=new Float32Array(VC*2);
+
+  for(var j=0;j<GRID;j++){
+    for(var i=0;i<GRID;i++){
+      var idx=j*GRID+i;
+      var wx=(i-res/2)*s, wy=(j-res/2)*s;
+      var h=hmap[idx];
+      pos[idx*3]=wx; pos[idx*3+1]=h; pos[idx*3+2]=wy;
+      uv[idx*2]=i/res; uv[idx*2+1]=j/res;
+    }
+  }
+  
+  var idxBuf=new Uint32Array(res*res*6);
+  var p=0;
+  for(var j=0;j<res;j++){
+    for(var i=0;i<res;i++){
+      var a=j*GRID+i, b=a+1, c=a+GRID, d=c+1;
+      idxBuf[p++]=a; idxBuf[p++]=c; idxBuf[p++]=b;
+      idxBuf[p++]=b; idxBuf[p++]=c; idxBuf[p++]=d;
+    }
+  }
+  geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  geo.setAttribute('uv',new THREE.BufferAttribute(uv,2));
+  geo.setIndex(new THREE.BufferAttribute(idxBuf,1));
+  geo.computeVertexNormals();
+
+  var mat=new THREE.MeshStandardMaterial({
+    color: 0x4a7c59, // Standard green terrain color
+    roughness:0.9, metalness:0.0,
+    wireframe:STATE.wireframe, flatShading:STATE.flatShade,
+    side:THREE.FrontSide
   });
-  compileEquation(); 
+  terrainMesh=new THREE.Mesh(geo,mat);
+  terrainMesh.receiveShadow=true;
+  terrainMesh.castShadow=false;
+  scene.add(terrainMesh);
+}
 
-  // --- THE STAMP RENDERING SYSTEM ---
-  function applyStampToVertices(stamp, pos, vertexCount) {
-    const posArr = pos.array;
-    const size = currentGridSize;
-    const segments = currentSegments;
-    const vertexPerSide = segments + 1;
-    
-    let minX = stamp.cx - stamp.radius;
-    let maxX = stamp.cx + stamp.radius;
-    let minZ = stamp.cz - stamp.radius;
-    let maxZ = stamp.cz + stamp.radius;
-    let rSq = stamp.radius * stamp.radius;
+//  MAIN GENERATE FUNCTION 
+var generating=false;
 
-    // OPTIMIZATION: Instead of scanning the entire grid, compute row/col boundaries directly.
-    let minCol = Math.max(0, Math.floor((minX + size / 2) / size * segments));
-    let maxCol = Math.min(segments, Math.ceil((maxX + size / 2) / size * segments));
-    let minRow = Math.max(0, Math.floor((size / 2 - maxZ) / size * segments));
-    let maxRow = Math.min(segments, Math.ceil((size / 2 - minZ) / size * segments));
+function generate(showProgress){
+  if(generating) return;
+  generating=true;
+  if(showProgress!==false) showGenProgress();
 
-    for (let r = minRow; r <= maxRow; r++) {
-      for (let c = minCol; c <= maxCol; c++) {
-        let i = r * vertexPerSide + c;
-        if (i >= vertexCount) continue;
-        let i3 = i * 3;
-        
-        let vx = posArr[i3];
-        let vz = posArr[i3 + 2];
+  setTimeout(function(){
+    setProgress(10,'Building heightmap…');
+    gNoise = new SimplexNoise(STATE.seed);
 
-        let dx = vx - stamp.cx;
-        let dz = vz - stamp.cz;
-        let distSq = dx*dx + dz*dz;
+    setTimeout(function(){
+      var data;
+      try{ data=buildHeightmap(); }
+      catch(e){ toast('Error','Heightmap failed: '+e.message); hideGenProgress(); generating=false; return; }
+      heightCache=data;
+      setProgress(50,'Meshing terrain…');
 
-        if (distSq < rSq) {
-          let dist = Math.sqrt(distSq);
-          let falloff = 1 - (dist / stamp.radius);
-          falloff = falloff * falloff * (3 - 2 * falloff); 
+      setTimeout(function(){
+        try{ buildTerrainMesh(data); }
+        catch(e){ toast('Error','Mesh failed: '+e.message); hideGenProgress(); generating=false; return; }
+        setProgress(100,'Done!');
+        updateStats();
 
-          evalScope.x = vx;
-          evalScope.y = vz;
-          evalScope.t = globalTime;
-          evalScope.d = Math.sqrt(vx*vx + vz*vz);
-          
-          let newHeight = stamp.node.evaluate(evalScope);
-          posArr[i3 + 1] += (newHeight * falloff);
+        setTimeout(function(){
+          hideGenProgress();
+          generating=false;
+          toast('Terrain Built','Seed '+STATE.seed+'.');
+        },350);
+      },10);
+    },10);
+  },40);
+}
+
+function showGenProgress(){
+  $('gen-progress').style.display='flex';
+  setProgress(0,'Starting…');
+}
+function hideGenProgress(){$('gen-progress').style.display='none';}
+function setProgress(pct,label){
+  $('prog-bar').style.width=pct+'%';
+  $('prog-label').textContent=label;
+}
+
+//  STATS 
+function updateStats(){
+  $('s-peak').textContent=zMax.toFixed(2)+'u';
+}
+
+//  LAYERS 
+var layN=0;
+
+function addLayer(eq,blend,op,on){
+  eq=eq||'fbm(x*2,y*2,4)*0.5';
+  blend=blend||'add'; op=op!=null?op:1.0; on=on!=null?on:true;
+  var id=++layN;
+  var fn=null;
+  try{fn=getEquationFn(eq);}catch(e){}
+  var lay={id:id,eq:eq,blend:blend,op:op,on:on,fn:fn};
+  STATE.layers.push(lay);
+  var row=document.createElement('div');
+  row.className='lay-row'; row.dataset.lid=id;
+  row.innerHTML=
+    '<span style="font-family:var(--fm);font-size:9px;color:var(--t3);min-width:18px">L'+STATE.layers.length+'</span>'+
+    '<input type="checkbox" '+(on?'checked':'')+' title="Enable layer">'+
+    '<input type="text" class="leq" value="'+escH(eq)+'" placeholder="layer equation…" style="flex:1">'+
+    '<select class="lblend" title="Blend mode">'+
+      '<option value="add"'+(blend==='add'?' selected':'')+'>+ Add</option>'+
+      '<option value="multiply"'+(blend==='multiply'?' selected':'')+'>× Mul</option>'+
+      '<option value="subtract"'+(blend==='subtract'?' selected':'')+'>- Sub</option>'+
+      '<option value="replace"'+(blend==='replace'?' selected':'')+'>= Rep</option>'+
+    '</select>'+
+    '<input type="range" class="lop" min="0" max="2" step="0.05" value="'+op+'">'+
+    '<span class="svs lop-v">'+op.toFixed(2)+'</span>'+
+    '<button class="btn sm er lrm" title="Remove"></button>';
+  var eqIn=row.querySelector('.leq');
+  var chk=row.querySelector('input[type=checkbox]');
+  var blSel=row.querySelector('.lblend');
+  var opR=row.querySelector('.lop');
+  var opV=row.querySelector('.lop-v');
+  eqIn.addEventListener('input',function(){
+    lay.eq=eqIn.value;
+    try{lay.fn=getEquationFn(eqIn.value);eqIn.style.borderColor='';}
+    catch(e){lay.fn=null;eqIn.style.borderColor='var(--er)';}
+  });
+  chk.addEventListener('change',function(){lay.on=chk.checked;});
+  blSel.addEventListener('change',function(){lay.blend=blSel.value;});
+  opR.addEventListener('input',function(){lay.op=parseFloat(opR.value);opV.textContent=lay.op.toFixed(2);});
+  row.querySelector('.lrm').addEventListener('click',function(){
+    STATE.layers=STATE.layers.filter(function(l){return l.id!==id;});
+    row.remove();renumLayers();
+  });
+  $('lay-con').appendChild(row);
+  renumLayers();
+}
+
+function renumLayers(){
+  var rows=$('lay-con').querySelectorAll('.lay-row');
+  rows.forEach(function(r,i){
+    var sp=r.querySelector('span');
+    if(sp) sp.textContent='L'+(i+1);
+  });
+}
+
+//  TOAST 
+function toast(title,body){
+  var t=document.createElement('div');t.className='toast';
+  t.innerHTML='<div class="tt">'+title+'</div><div class="tb">'+body+'</div>';
+  $('toast-box').appendChild(t);
+  setTimeout(function(){if(t.parentNode)t.remove();},4400);
+}
+
+//  SYNC UI  STATE 
+function sl(id,key,fmt){
+  var el=$(id); if(!el) return;
+  el.addEventListener('input',function(){
+    STATE[key]=parseFloat(el.value);
+    var vEl=$('v-'+id.replace('sl-',''));
+    if(vEl) vEl.textContent=fmt?parseFloat(el.value).toFixed(fmt):el.value;
+  });
+}
+function tog(wrapId,togId,key,cb){
+  var wrap=$(wrapId), tog=$(togId); if(!wrap||!tog) return;
+  wrap.addEventListener('click',function(){
+    STATE[key]=!STATE[key];
+    tog.classList.toggle('on',STATE[key]);
+    if(cb) cb(STATE[key]);
+  });
+  tog.classList.toggle('on',STATE[key]);
+}
+
+function syncAllUI(){
+  function sv(id,v){ var e=$(id);if(e)e.value=v; }
+  function svt(id,v){ var e=$(id);if(e)e.textContent=v; }
+  sv('terrain-eq',STATE.eq);
+  sv('sl-scale',STATE.scale); svt('v-scale',STATE.scale.toFixed(2));
+  sv('sl-amp',STATE.amp); svt('v-amp',STATE.amp.toFixed(1));
+  sv('sl-oct',STATE.oct); svt('v-oct',STATE.oct);
+  sv('sl-rough',STATE.rough); svt('v-rough',STATE.rough.toFixed(2));
+  sv('sl-res',STATE.res); svt('v-res',STATE.res);
+  sv('sl-ero',STATE.erosion); svt('v-ero',STATE.erosion.toFixed(2));
+  
+  $('tc-tog').classList.toggle('on',STATE.autoRotate);
+  $('tw-tog').classList.toggle('on',STATE.wireframe);
+  $('tf-tog').classList.toggle('on',STATE.flatShade);
+}
+
+function escH(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+//  CAPTURE / RESTORE (IndexedDB) 
+var IDB=null;
+var DB_NAME='TerrainForgeDB', DB_VER=1, DB_STORE='maps';
+var currentProjId=null;
+
+function openDB(cb){
+  if(IDB){cb(IDB);return;}
+  var req=indexedDB.open(DB_NAME,DB_VER);
+  req.onupgradeneeded=function(e){
+    var db=e.target.result;
+    if(!db.objectStoreNames.contains(DB_STORE))
+      db.createObjectStore(DB_STORE,{keyPath:'id',autoIncrement:true});
+  };
+  req.onsuccess=function(e){IDB=e.target.result;cb(IDB);};
+  req.onerror=function(e){console.error('IDB',e);};
+}
+function getAllMaps(cb){
+  openDB(function(db){
+    var req=db.transaction(DB_STORE,'readonly').objectStore(DB_STORE).getAll();
+    req.onsuccess=function(e){cb(e.target.result||[]);};
+    req.onerror=function(){cb([]);};
+  });
+}
+function getMapById(id,cb){
+  openDB(function(db){
+    var req=db.transaction(DB_STORE,'readonly').objectStore(DB_STORE).get(id);
+    req.onsuccess=function(e){cb(e.target.result||null);};
+    req.onerror=function(){cb(null);};
+  });
+}
+function saveMapDB(proj,cb){
+  openDB(function(db){
+    var req=db.transaction(DB_STORE,'readwrite').objectStore(DB_STORE).put(proj);
+    req.onsuccess=function(e){cb&&cb(e.target.result);};
+    req.onerror=function(e){console.error('Save',e);};
+  });
+}
+function deleteMapDB(id,cb){
+  openDB(function(db){
+    var req=db.transaction(DB_STORE,'readwrite').objectStore(DB_STORE).delete(id);
+    req.onsuccess=function(){cb&&cb();};
+    req.onerror=function(e){console.error('Del',e);};
+  });
+}
+
+function captureThumb(){
+  try{
+    var th=document.createElement('canvas');th.width=320;th.height=180;
+    renderer.render(scene,camera);
+    th.getContext('2d').drawImage(renderer.domElement,0,0,320,180);
+    return th.toDataURL('image/jpeg',0.78);
+  }catch(e){return '';}
+}
+function captureState(){
+  return JSON.parse(JSON.stringify(STATE));
+}
+function restoreState(st){
+  if(!st) return;
+  Object.assign(STATE,st);
+  syncAllUI();
+  $('lay-con').innerHTML='';STATE.layers=[];
+  if(st.layers&&st.layers.length){
+    st.layers.forEach(function(l){addLayer(l.eq,l.blend,l.op,l.on);});
+  }
+  generate();
+}
+
+//  HOME / VISUALIZER SCREENS 
+var VIZ_IDS=['terrain-stats','terrain-ui','utog','viz-topbar'];
+
+function showVisualizer(name){
+  $('home-screen').style.display='none';
+  $('viz-topbar').style.display='flex';
+  $('terrain-stats').style.display='flex';
+  $('terrain-ui').style.display='flex';
+  $('utog').style.display='flex';
+  $('proj-cur-name').textContent=name||'Unsaved Map';
+}
+function showHome(){
+  $('home-screen').style.display='flex';
+  $('viz-topbar').style.display='none';
+  $('terrain-stats').style.display='none';
+  $('terrain-ui').style.display='none';
+  $('utog').style.display='none';
+  currentProjId=null;
+  loadHomeProjects();
+}
+
+function fmtDate(ts){
+  if(!ts) return '—';
+  return new Date(ts).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
+}
+
+function loadHomeProjects(){
+  getAllMaps(function(maps){
+    var grid=$('proj-grid');grid.innerHTML='';
+    $('hs-proj-count').textContent=maps.length;
+    if(!maps.length){
+      grid.innerHTML='<div class="empty-state">'+
+        '<div class="empty-icon"></div>'+
+        '<h3>No saved maps yet</h3>'+
+        '<p>Create your first terrain using the + button above.</p>'+
+        '</div>';
+      return;
+    }
+    maps.sort(function(a,b){return(b.updatedAt||0)-(a.updatedAt||0);});
+    maps.forEach(function(m){grid.appendChild(mkMapCard(m));});
+  });
+}
+
+function mkMapCard(proj){
+  var card=document.createElement('div');card.className='proj-card';
+  var eq=(proj.state&&proj.state.eq)||'—';
+  var eqShort=eq.length>44?eq.slice(0,42)+'…':eq;
+  var thumb=proj.thumbnail||'';
+  card.innerHTML=
+    '<div class="proj-thumb">'+
+      (thumb?'<img src="'+thumb+'" alt="Map preview" loading="lazy">':'<div class="proj-thumb-placeholder"></div>')+
+      '<div class="proj-thumb-overlay"></div>'+
+    '</div>'+
+    '<div class="proj-info">'+
+      '<div class="proj-name">'+escH(proj.name)+'</div>'+
+      '<div class="proj-meta"><span class="proj-meta-lbl">Seed</span><span class="proj-meta-val">'+((proj.state&&proj.state.seed)||'—')+'</span></div>'+
+      '<div class="proj-meta"><span class="proj-meta-lbl">Updated</span><span class="proj-meta-val">'+fmtDate(proj.updatedAt)+'</span></div>'+
+      '<div class="proj-eq"><code>h = '+escH(eqShort)+'</code></div>'+
+    '</div>'+
+    '<div class="proj-actions">'+
+      '<button class="proj-open"> Open Map</button>'+
+      '<button class="proj-del" title="Delete"></button>'+
+    '</div>';
+  card.querySelector('.proj-open').addEventListener('click',function(e){
+    e.stopPropagation();openMap(proj);
+  });
+  card.querySelector('.proj-del').addEventListener('click',function(e){
+    e.stopPropagation();
+    var btn=e.currentTarget;
+    if(btn.dataset.confirming==='1'){
+      btn.dataset.confirming='0';
+      deleteMapDB(proj.id,function(){loadHomeProjects();});
+    }else{
+      btn.dataset.confirming='1';btn.textContent='';
+      btn.style.cssText='background:rgba(240,68,102,.32)!important;border-color:#f04466!important;color:#fff!important;';
+      setTimeout(function(){
+        if(btn.dataset.confirming==='1'){
+          btn.dataset.confirming='0';btn.textContent='';btn.style.cssText='';
         }
-      }
+      },2500);
     }
+  });
+  card.addEventListener('click',function(){openMap(proj);});
+  return card;
+}
+
+function openMap(proj){
+  currentProjId=proj.id;
+  showVisualizer(proj.name);
+  restoreState(proj.state);
+}
+
+function showSaveModal(){
+  var inp=$('proj-name-inp');
+  inp.value=$('proj-cur-name').textContent==='Unsaved Map'?'':$('proj-cur-name').textContent;
+  $('save-modal').classList.add('open');
+  setTimeout(function(){inp.focus();inp.select();},60);
+}
+function hideSaveModal(){$('save-modal').classList.remove('open');}
+function doSave(){
+  var name=$('proj-name-inp').value.trim()||'Untitled Map';
+  var now=Date.now();
+  var state=captureState();
+  var thumb=captureThumb();
+  hideSaveModal();
+  function performSave(createdAt){
+    var proj={name:name,createdAt:createdAt,updatedAt:now,state:state,thumbnail:thumb};
+    if(currentProjId) proj.id=currentProjId;
+    saveMapDB(proj,function(id){
+      currentProjId=id;
+      $('proj-cur-name').textContent=name;
+      toast(' Saved','"'+escH(name)+'" saved to library.');
+    });
   }
-
-  let lastHitPoint = null;
-
-  function applyTerrainLogic() {
-    if (!compiledNode || isGPU) return;
-    
-    raycaster.setFromCamera(mouse, camera);
-    let hitPoint = raycaster.ray.intersectPlane(groundPlane, new THREE.Vector3());
-    
-    let brushMovedOrChanged = false;
-    if (hitPoint) {
-      if (!lastHitPoint || !brushCenter.equals(hitPoint)) {
-        brushCenter.copy(hitPoint);
-        brushMovedOrChanged = true;
-      }
-      brushRing.position.set(brushCenter.x, brushCenter.y + 0.5, brushCenter.z);
-      brushRing.visible = true;
-    } else {
-      if (brushRing.visible) brushMovedOrChanged = true;
-      brushRing.visible = false;
-    }
-    lastHitPoint = hitPoint;
-
-    // Check if any active stamp or preview is dynamic/animated
-    const hasAnimations = placedStamps.length > 0 || (document.getElementById('live-preview').checked && brushRing.visible && eqInput.value.includes('t'));
-
-    // OPTIMIZATION: If nothing is dynamic, the brush hasn't moved, and no structural changes happened, skip pipeline completely
-    if (!hasAnimations && !brushMovedOrChanged && !meshNeedsForceUpdate) {
-      return;
-    }
-    meshNeedsForceUpdate = false;
-
-    const geometry = terrain.geometry;
-    const pos = geometry.attributes.position;
-    const vertexCount = pos.count;
-    const posArr = pos.array;
-
-    // 1. Reset array directly to matrix baseHeights
-    for(let i=0; i<vertexCount; i++) {
-        posArr[i * 3 + 1] = baseHeights[i];
-    }
-
-    // 2. Add only dynamic/animated placed stamps
-    for (let stamp of placedStamps) {
-      applyStampToVertices(stamp, pos, vertexCount);
-    }
-
-    // 3. Add live preview stamp
-    if (hitPoint && document.getElementById('live-preview').checked) {
-      let tempPreviewStamp = {
-        node: compiledNode,
-        cx: brushCenter.x,
-        cz: brushCenter.z,
-        radius: brushRadius
-      };
-      applyStampToVertices(tempPreviewStamp, pos, vertexCount);
-    }
-
-    pos.needsUpdate = true;
-    updateColors(); 
+  if(currentProjId){
+    getMapById(currentProjId,function(ex){performSave(ex?ex.createdAt:now);});
+  }else{
+    performSave(now);
   }
+}
 
-  // --- BUTTON LOGIC ---
-  document.getElementById('btn-apply').addEventListener('click', () => {
-    if(isGPU) {
-      alert("Switch back to CPU mode to place local stamps!");
-      return;
-    }
-    if (brushRing.visible && compiledNode) {
-      const eqText = eqInput.value;
-      const isAnimated = eqText.includes('t');
-      
-      const newStamp = {
-        node: compiledNode,     
-        cx: brushCenter.x,      
-        cz: brushCenter.z,      
-        radius: brushRadius     
-      };
-
-      if (isAnimated) {
-        placedStamps.push(newStamp);
-      } else {
-        // OPTIMIZATION: Bake static calculations directly into baseline height matrix permanently
-        const geometry = terrain.geometry;
-        const pos = geometry.attributes.position;
-        applyStampToVertices(newStamp, { array: baseHeights }, pos.count);
-      }
-      meshNeedsForceUpdate = true;
-    }
+//  WIRE UP ALL EVENTS 
+function bindEvents(){
+  var sliders=[
+    ['sl-scale','scale',2],['sl-amp','amp',1],['sl-oct','oct',0],
+    ['sl-rough','rough',2],['sl-res','res',0],['sl-ero','erosion',2]
+  ];
+  sliders.forEach(function(s){
+    var el=$(s[0]);if(!el)return;
+    el.addEventListener('input',function(){
+      STATE[s[1]]=parseFloat(el.value);
+      var vEl=$('v-'+s[0].replace('sl-',''));
+      if(vEl) vEl.textContent=parseFloat(el.value).toFixed(s[2]);
+    });
   });
 
-  document.getElementById('btn-clear').addEventListener('click', () => {
-    placedStamps = [];
-    for(let i=0; i<baseHeights.length; i++) baseHeights[i] = 0;
-    meshNeedsForceUpdate = true;
+  $('terrain-eq').addEventListener('input',function(){
+    STATE.eq=$('terrain-eq').value;
+    $('terrain-eq').classList.remove('ie');
+  });
+  $('terrain-eq').addEventListener('keydown',function(e){
+    if(e.key==='Enter'){generate();}
   });
 
-  document.getElementById('btn-gpu').addEventListener('click', () => {
-    isGPU = !isGPU;
-    const btn = document.getElementById('btn-gpu');
-    
-    if (isGPU) {
-      btn.innerText = "Shift to CPU (Local Brush Mode)";
-      btn.style.background = "#2ed573"; 
-      brushRing.visible = false;
-      
-      let glslEq = eqInput.value
-          .replace(/t/g, 'time')
-          .replace(/d/g, 'length(position.xz)');
-      glslEq = glslEq.replace(/(?<!\w|\.)(\d+)(?!\w|\.)/g, '$1.0');
+  $('preset-sel').addEventListener('change',function(){
+    if(!$('preset-sel').value) return;
+    STATE.eq=$('preset-sel').value;
+    $('terrain-eq').value=STATE.eq;
+    $('preset-sel').value='';
+    generate();
+  });
 
-      gpuMaterial = new THREE.ShaderMaterial({
-        uniforms: {
-          time: { value: 0 },
-          color1: { value: new THREE.Color(0x3cb371) },
-          color2: { value: new THREE.Color(0x1e90ff) }
-        },
-        vertexShader: `
-          uniform float time;
-          varying float vHeight;
-          void main() {
-            vec3 pos = position;
-            float h = ${glslEq}; 
-            pos.y += h;
-            vHeight = pos.y;
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
-          }
-        `,
-        fragmentShader: `
-          uniform vec3 color1;
-          uniform vec3 color2;
-          varying float vHeight;
-          void main() {
-            vec3 finalColor = mix(color2, color1, smoothstep(-5.0, 10.0, vHeight));
-            gl_FragColor = vec4(finalColor, 1.0);
-          }
-        `,
-        wireframe: false,
-        side: THREE.DoubleSide
-      });
-      
-      terrain.material = gpuMaterial;
-    } else {
-      btn.innerText = "Shift to GPU (Global Shader)";
-      btn.style.background = "#ff4757";
-      terrain.material = standardMaterial;
-      meshNeedsForceUpdate = true;
+  $('btn-regen').addEventListener('click',function(){generate();});
+
+  tog('tog-wire','tw-tog','wireframe',function(v){
+    if(terrainMesh) terrainMesh.material.wireframe=v;
+  });
+  tog('tog-flat','tf-tog','flatShade',function(v){
+    if(terrainMesh){terrainMesh.material.flatShading=v;terrainMesh.material.needsUpdate=true;}
+  });
+  tog('tog-cam','tc-tog','autoRotate',function(v){orb.autoRotate=v;});
+
+  $('b-lay').addEventListener('click',function(){addLayer();});
+  $('b-lay-clr').addEventListener('click',function(){
+    $('lay-con').innerHTML='';STATE.layers=[];
+  });
+
+  document.querySelectorAll('.tab-btn').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('active');});
+      document.querySelectorAll('.tab-pane').forEach(function(p){p.classList.remove('active');});
+      btn.classList.add('active');
+      var pane=$('tab-'+btn.dataset.tab);
+      if(pane) pane.classList.add('active');
+    });
+  });
+
+  $('utog').addEventListener('click',function(){
+    var col=!$('terrain-ui').classList.contains('collapsed');
+    $('terrain-ui').classList.toggle('collapsed',col);
+    $('utog').textContent=col?'':'';
+  });
+
+  $('btn-back-home').addEventListener('click',showHome);
+  $('btn-save-proj').addEventListener('click',showSaveModal);
+  $('btn-new-proj').addEventListener('click',function(){
+    currentProjId=null;
+    STATE.seed=Math.floor(Math.random()*99999);
+    STATE.eq='fbm(x,y,6)*3 + ridge(x,y)*1.5';
+    syncAllUI();
+    showVisualizer();
+    generate();
+  });
+
+  $('save-confirm').addEventListener('click',doSave);
+  $('save-cancel').addEventListener('click',hideSaveModal);
+  $('proj-name-inp').addEventListener('keydown',function(e){
+    if(e.key==='Enter') doSave();
+    if(e.key==='Escape') hideSaveModal();
+  });
+  $('save-modal').addEventListener('click',function(e){if(e.target===$('save-modal'))hideSaveModal();});
+
+  window.addEventListener('keydown',function(e){
+    var act=document.activeElement;
+    if(act===$('terrain-eq')||act===$('proj-name-inp')){
+      if(e.key==='Escape')act.blur(); return;
     }
+    if(e.key===' '){e.preventDefault();orb.autoRotate=!orb.autoRotate;$('tc-tog').classList.toggle('on',orb.autoRotate);}
+    if(e.key.toLowerCase()==='g') generate();
+    if(e.key.toLowerCase()==='h') $('utog').click();
+    if(e.key.toLowerCase()==='w') $('tog-wire').click();
   });
+}
 
-  document.getElementById('preset-select').addEventListener('change', (e) => {
-    if(e.target.value !== "custom") {
-      eqInput.value = e.target.value;
-      compileEquation();
-      meshNeedsForceUpdate = true;
-    }
-  });
+//  ANIMATION LOOP 
+var lastT=performance.now();
+function animate(){
+  requestAnimationFrame(animate);
+  var now=performance.now(), dt=Math.min((now-lastT)/1000,.05);lastT=now;
+  gTime+=dt;
+  if(orb.autoRotate&&!orb.dragging){orb.theta+=dt*.1;applyCam();}
+  renderer.render(scene,camera);
+}
 
-  function syncRadius(val) {
-    brushRadius = Math.max(2, parseFloat(val) || 2);
-    document.getElementById('brush-radius').value = brushRadius;
-    document.getElementById('rad-num').value = brushRadius;
-    brushRing.scale.set(brushRadius, 1, brushRadius);
-    meshNeedsForceUpdate = true;
+//  INIT 
+window.addEventListener('DOMContentLoaded',function(){
+  try{
+    initThree();
+    bindEvents();
+    syncAllUI();
+    $('loading').style.display='none';
+    showHome();
+    animate();
+  }catch(e){
+    console.error(e);
+    $('loading').innerHTML='<h2 style="color:#f04466">Initialisation Error</h2><p style="color:#a0b0c0;font-size:12px">'+e.message+'</p>';
   }
-  document.getElementById('brush-radius').addEventListener('input', e => syncRadius(e.target.value));
-  document.getElementById('rad-num').addEventListener('input', e => syncRadius(e.target.value));
-
-  document.getElementById('toggle-ui-btn').addEventListener('click', () => {
-    const ui = document.getElementById('ui');
-    ui.style.display = ui.style.display === 'none' ? 'block' : 'none';
-  });
-
-  document.getElementById('btn-resize').addEventListener('click', () => {
-    const newSize = parseFloat(document.getElementById('grid-size').value);
-    if (!isNaN(newSize) && newSize >= 50) createTerrain(newSize);
-  });
-
-  createTerrain(200);
-  window.addEventListener('resize', () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-  });
-
-  // --- MAIN LOOP ---
-  function animate() {
-    requestAnimationFrame(animate);
-    controls.update();
-    
-    globalTime += 0.03; 
-
-    if (isGPU && gpuMaterial) {
-      gpuMaterial.uniforms.time.value = globalTime;
-    } else {
-      applyTerrainLogic(); 
-    }
-
-    renderer.render(scene, camera);
-  }
-  animate();
+});
 </script>
 </body>
 </html>

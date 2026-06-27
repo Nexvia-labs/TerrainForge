@@ -249,6 +249,9 @@ select option{background:#05101e}
   <p>Initialising procedural engine…</p>
 </div>
 
+<!-- 3D CANVAS filled by Three.js -->
+
+<!-- TOP BAR -->
 <div id="viz-topbar">
   <button class="btn sm" id="btn-back-home"> Home</button>
   <span id="proj-cur-name">Unsaved Map</span>
@@ -256,26 +259,33 @@ select option{background:#05101e}
   <button class="btn sm" id="btn-save-proj"> Save</button>
 </div>
 
+<!-- STATS -->
 <div id="terrain-stats">
   <div class="sr"><span class="sl">Peak Height</span><span class="sv ca" id="s-peak">—</span></div>
 </div>
 
+<!-- GEN PROGRESS -->
 <div id="gen-progress">
   <h4> Building Terrain…</h4>
   <div id="prog-bar-wrap"><div id="prog-bar"></div></div>
   <div id="prog-label">Initialising heightmap…</div>
 </div>
 
+<!-- TOAST BOX -->
 <div id="toast-box"></div>
 
+<!-- TOGGLE BUTTON -->
 <button class="btn" id="utog"></button>
 
+<!-- MAIN UI PANEL -->
 <div id="terrain-ui">
   <div class="tab-row">
     <button class="tab-btn active" data-tab="terrain"> Terrain</button>
     <button class="tab-btn" data-tab="layers"> Layers</button>
+    <button class="tab-btn" data-tab="color"> Color</button>
   </div>
 
+  <!-- TERRAIN TAB -->
   <div class="tab-pane active" id="tab-terrain">
     <div class="ph">Heightmap Equation</div>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -326,6 +336,7 @@ select option{background:#05101e}
     </div>
   </div>
 
+  <!-- LAYERS TAB -->
   <div class="tab-pane" id="tab-layers">
     <div class="ph">Mathematical Layers (composited on top of base heightmap)</div>
     <div id="lay-con"></div>
@@ -334,14 +345,69 @@ select option{background:#05101e}
       <button class="btn sm" id="b-lay-clr"> Clear All</button>
     </div>
   </div>
+
+  <!-- COLOR TAB -->
+  <div class="tab-pane" id="tab-color">
+    <div class="ph">Splat Map — Texture Zones by Height & Slope</div>
+    <div class="cr">
+      <div class="sg">
+        <span class="swatch" style="background:#1a6bbd"></span>
+        <span class="slbl">Deep Water</span>
+        <input type="color" id="c-deep" value="#1a6bbd">
+      </div>
+      <div class="sg">
+        <span class="swatch" style="background:#3d8fd4"></span>
+        <span class="slbl">Shallow</span>
+        <input type="color" id="c-shallow" value="#3d8fd4">
+      </div>
+      <div class="sg">
+        <span class="swatch" style="background:#e6c97a"></span>
+        <span class="slbl">Sand/Beach</span>
+        <input type="color" id="c-sand" value="#e6c97a">
+      </div>
+      <div class="sg">
+        <span class="swatch" style="background:#4a9e3f"></span>
+        <span class="slbl">Grass</span>
+        <input type="color" id="c-grass" value="#4a9e3f">
+      </div>
+      <div class="sg">
+        <span class="swatch" style="background:#2d6b24"></span>
+        <span class="slbl">Forest</span>
+        <input type="color" id="c-forest" value="#2d6b24">
+      </div>
+      <div class="sg">
+        <span class="swatch" style="background:#8a7d6e"></span>
+        <span class="slbl">Rock</span>
+        <input type="color" id="c-rock" value="#8a7d6e">
+      </div>
+      <div class="sg">
+        <span class="swatch" style="background:#e8eef2"></span>
+        <span class="slbl">Snow</span>
+        <input type="color" id="c-snow" value="#e8eef2">
+      </div>
+    </div>
+    <div class="div"></div>
+    <div class="cr">
+      <div class="sg"><span class="slbl">Blend Soft</span>
+        <input type="range" id="sl-cblend" min="0.01" max="0.3" step="0.01" value="0.08">
+        <span class="svs" id="v-cblend">0.08</span></div>
+      <div class="sg"><span class="slbl">Beach Width</span>
+        <input type="range" id="sl-beach" min="0.01" max="0.15" step="0.005" value="0.04">
+        <span class="svs" id="v-beach">0.040</span></div>
+      <button class="btn sm" id="btn-apply-color"> Apply Colors</button>
+    </div>
+  </div>
+
 </div>
 
+<!-- HOME SCREEN -->
 <div id="home-screen">
   <div class="hs-hero">
     <h1> TerrainForge</h1>
     <p>Build procedural 3D maps using mathematical equations — mountains, rivers, forests, and more. Powered by fBm noise and GPU shaders.</p>
     <div class="hs-badges">
       <span class="badge">fBm Heightmaps</span>
+      <span class="badge">Splat Coloring</span>
       <span class="badge">Equation Layers</span>
     </div>
   </div>
@@ -354,6 +420,7 @@ select option{background:#05101e}
   <div class="proj-grid" id="proj-grid"></div>
 </div>
 
+<!-- SAVE MODAL -->
 <div id="save-modal">
   <div class="modal-box">
     <h3> Save Map</h3>
@@ -365,11 +432,12 @@ select option{background:#05101e}
   </div>
 </div>
 
+<!-- THREE.JS via CDN -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 // 
 // TERRAINFORGE — Procedural 3D Map Builder
-// Architecture: fBm Heightmap  GPU Mesh
+// Architecture: fBm Heightmap  GPU Mesh  Splat Colors  Spawn
 // 
 
 var $ = function(id){ return document.getElementById(id); };
@@ -493,14 +561,23 @@ var STATE = {
   eq: 'fbm(x,y,6)*3 + ridge(x,y)*1.5',
   scale: 1.0, amp: 2.0, oct: 6, rough: 0.5,
   res: 128, erosion: 0.0,
+  colors:{deep:'#1a6bbd',shallow:'#3d8fd4',sand:'#e6c97a',grass:'#4a9e3f',
+          forest:'#2d6b24',rock:'#8a7d6e',snow:'#e8eef2'},
+  cBlend:0.08, beachW:0.04,
   wireframe:false, flatShade:false,
   seed: 42, layers: [],
   autoRotate: true
 };
 
+// Internal constants (not user-configurable)
+var SEA_LEVEL = 0.0;
+var SNOW_LINE = 0.78;
+var FOREST_LO = 0.12;
+var FOREST_HI = 0.62;
+
 var gNoise = new SimplexNoise(42);
 var gTime = 0;
-var heightCache = null; 
+var heightCache = null; // last generated heightmap
 var zMin=0,zMax=1;
 
 //  NOISE LIBRARY 
@@ -530,6 +607,8 @@ function domWarp(x,y,s){
 }
 
 //  BUILTIN MAP GENERATORS 
+// Each returns a function(x,y) -> height
+// Built-in map helpers (referenced by equation strings)
 var _builtins = {
   island: function(x,y,r){
     r=r||3.5;
@@ -567,11 +646,15 @@ var _builtins = {
 };
 
 function getEquationFn(eq){
+  // Build a Function so we avoid with() (forbidden in strict mode)
+  // Inject all helpers as named parameters
   var fn;
   try {
     fn = new Function(
       'x','y','t',
+      // Math
       'sin','cos','tan','abs','sqrt','pow','floor','ceil','round','max','min','log','exp','PI',
+      // Terrain helpers
       'fbm','ridge','noise','dist','warp',
       'island','canyon','volcano','fjord','mesa','archipelago','plains',
       'return (' + eq + ');'
@@ -598,7 +681,7 @@ function getEquationFn(eq){
 }
 
 //  HEIGHTMAP GENERATION 
-var SURF = 20;
+var SURF = 20; // world units
 
 function buildHeightmap(){
   var res = STATE.res;
@@ -612,7 +695,9 @@ function buildHeightmap(){
   for(var j=0;j<GRID;j++){
     for(var i=0;i<GRID;i++){
       var wx=(i-res/2)*s*scl, wy=(j-res/2)*s*scl;
+      // Base heightmap
       var h=eq(wx,wy,0)*amp;
+      // Layer compositing
       for(var li=0;li<STATE.layers.length;li++){
         var lay=STATE.layers[li];
         if(!lay.on||!lay.fn)continue;
@@ -625,13 +710,15 @@ function buildHeightmap(){
       hmap[j*GRID+i]=h;
     }
   }
+  // Hydraulic erosion pass
   if(STATE.erosion>0.01) hmap=erode(hmap,GRID,STATE.erosion);
-  
+  // Normalise
   zMin=Infinity; zMax=-Infinity;
   for(var i=0;i<VC;i++){if(hmap[i]<zMin)zMin=hmap[i];if(hmap[i]>zMax)zMax=hmap[i];}
   return{hmap:hmap,GRID:GRID,s:s};
 }
 
+// Simple erosion
 function erode(hmap,G,str){
   var out=new Float32Array(hmap.length);
   for(var j=0;j<G;j++){
@@ -648,6 +735,54 @@ function erode(hmap,G,str){
   return out;
 }
 
+//  SPLAT COLORING 
+function hex2rgb(hex){
+  hex=hex.replace('#','');
+  return[parseInt(hex.slice(0,2),16)/255,parseInt(hex.slice(2,4),16)/255,parseInt(hex.slice(4,6),16)/255];
+}
+function lerp3(a,b,t){return[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t];}
+function smooth(x,e0,e1){var t=Math.max(0,Math.min(1,(x-e0)/(e1-e0)));return t*t*(3-2*t);}
+
+function splatColor(hn, slope){
+  // hn = normalised height [0..1], slope [0..1]
+  var c=STATE.colors, sb=SEA_LEVEL, bw=STATE.beachW, bl=STATE.cBlend;
+  var seaN=(sb-zMin)/(zMax-zMin); // normalised sea level
+  var cDeep=hex2rgb(c.deep);
+  var cShallow=hex2rgb(c.shallow);
+  var cSand=hex2rgb(c.sand);
+  var cGrass=hex2rgb(c.grass);
+  var cForest=hex2rgb(c.forest);
+  var cRock=hex2rgb(c.rock);
+  var cSnow=hex2rgb(c.snow);
+
+  var rgb;
+  if(hn<seaN-bw){
+    // Deep water
+    rgb=lerp3(cDeep,cShallow,smooth(hn,seaN-bw*3,seaN-bw));
+  } else if(hn<seaN+bw){
+    // Beach transition
+    var bt=smooth(hn,seaN-bw,seaN+bw);
+    rgb=lerp3(cSand, hn<seaN?cShallow:cGrass, bt<0.5?bt*2:1);
+    if(hn<seaN) rgb=lerp3(cSand,cShallow,smooth(hn,seaN-bw,seaN));
+    else rgb=lerp3(cSand,cGrass,smooth(hn,seaN,seaN+bw));
+  } else {
+    // Land biomes
+    var sn2=SNOW_LINE, flo=FOREST_LO+seaN, fhi=FOREST_HI;
+    if(hn>sn2){
+      rgb=lerp3(cRock,cSnow,smooth(hn,sn2,sn2+bl));
+    } else if(slope>0.55){
+      rgb=lerp3(cGrass,cRock,smooth(slope,0.5,0.75));
+    } else if(hn>fhi){
+      rgb=lerp3(cForest,cRock,smooth(hn,fhi,fhi+bl));
+    } else if(hn>flo){
+      rgb=lerp3(cGrass,cForest,smooth(hn,flo,fhi));
+    } else {
+      rgb=lerp3(cSand,cGrass,smooth(hn,seaN+bw,flo+bl));
+    }
+  }
+  return rgb;
+}
+
 //  BUILD TERRAIN MESH 
 function buildTerrainMesh(data){
   if(terrainMesh){scene.remove(terrainMesh);terrainMesh.geometry.dispose();terrainMesh.material.dispose();}
@@ -656,6 +791,7 @@ function buildTerrainMesh(data){
   var geo=new THREE.BufferGeometry();
   var VC=GRID*GRID;
   var pos=new Float32Array(VC*3);
+  var col=new Float32Array(VC*3);
   var uv=new Float32Array(VC*2);
 
   for(var j=0;j<GRID;j++){
@@ -667,7 +803,24 @@ function buildTerrainMesh(data){
       uv[idx*2]=i/res; uv[idx*2+1]=j/res;
     }
   }
-  
+  // Compute slope from normals (rough approx)
+  var slopes=new Float32Array(VC);
+  for(var j=1;j<GRID-1;j++){
+    for(var i=1;i<GRID-1;i++){
+      var idx=j*GRID+i;
+      var dx=hmap[idx+1]-hmap[idx-1];
+      var dz=hmap[idx+GRID]-hmap[idx-GRID];
+      slopes[idx]=Math.sqrt(dx*dx+dz*dz)/(s*2);
+    }
+  }
+  var zRng=zMax-zMin||1;
+  for(var k=0;k<VC;k++){
+    var hn=(hmap[k]-zMin)/zRng;
+    var sl=Math.min(1,slopes[k]);
+    var rgb=splatColor(hn,sl);
+    col[k*3]=rgb[0]; col[k*3+1]=rgb[1]; col[k*3+2]=rgb[2];
+  }
+  // Indices
   var idxBuf=new Uint32Array(res*res*6);
   var p=0;
   for(var j=0;j<res;j++){
@@ -678,13 +831,13 @@ function buildTerrainMesh(data){
     }
   }
   geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  geo.setAttribute('color',new THREE.BufferAttribute(col,3));
   geo.setAttribute('uv',new THREE.BufferAttribute(uv,2));
   geo.setIndex(new THREE.BufferAttribute(idxBuf,1));
   geo.computeVertexNormals();
 
   var mat=new THREE.MeshStandardMaterial({
-    color: 0x4a7c59, // Standard green terrain color
-    roughness:0.9, metalness:0.0,
+    vertexColors:true, roughness:0.9, metalness:0.0,
     wireframe:STATE.wireframe, flatShading:STATE.flatShade,
     side:THREE.FrontSide
   });
@@ -692,6 +845,7 @@ function buildTerrainMesh(data){
   terrainMesh.receiveShadow=true;
   terrainMesh.castShadow=false;
   scene.add(terrainMesh);
+  return slopes;
 }
 
 //  MAIN GENERATE FUNCTION 
@@ -836,7 +990,12 @@ function syncAllUI(){
   sv('sl-rough',STATE.rough); svt('v-rough',STATE.rough.toFixed(2));
   sv('sl-res',STATE.res); svt('v-res',STATE.res);
   sv('sl-ero',STATE.erosion); svt('v-ero',STATE.erosion.toFixed(2));
-  
+  sv('sl-cblend',STATE.cBlend); svt('v-cblend',STATE.cBlend.toFixed(2));
+  sv('sl-beach',STATE.beachW); svt('v-beach',STATE.beachW.toFixed(3));
+  // Colors
+  Object.keys(STATE.colors).forEach(function(k){
+    var e=$('c-'+k);if(e)e.value=STATE.colors[k];
+  });
   $('tc-tog').classList.toggle('on',STATE.autoRotate);
   $('tw-tog').classList.toggle('on',STATE.wireframe);
   $('tf-tog').classList.toggle('on',STATE.flatShade);
@@ -904,6 +1063,7 @@ function restoreState(st){
   if(!st) return;
   Object.assign(STATE,st);
   syncAllUI();
+  // Restore layers
   $('lay-con').innerHTML='';STATE.layers=[];
   if(st.layers&&st.layers.length){
     st.layers.forEach(function(l){addLayer(l.eq,l.blend,l.op,l.on);});
@@ -1034,9 +1194,11 @@ function doSave(){
 
 //  WIRE UP ALL EVENTS 
 function bindEvents(){
+  // Sliders
   var sliders=[
     ['sl-scale','scale',2],['sl-amp','amp',1],['sl-oct','oct',0],
-    ['sl-rough','rough',2],['sl-res','res',0],['sl-ero','erosion',2]
+    ['sl-rough','rough',2],['sl-res','res',0],['sl-ero','erosion',2],
+    ['sl-cblend','cBlend',2],['sl-beach','beachW',3]
   ];
   sliders.forEach(function(s){
     var el=$(s[0]);if(!el)return;
@@ -1047,6 +1209,7 @@ function bindEvents(){
     });
   });
 
+  // Equation
   $('terrain-eq').addEventListener('input',function(){
     STATE.eq=$('terrain-eq').value;
     $('terrain-eq').classList.remove('ie');
@@ -1055,6 +1218,7 @@ function bindEvents(){
     if(e.key==='Enter'){generate();}
   });
 
+  // Preset
   $('preset-sel').addEventListener('change',function(){
     if(!$('preset-sel').value) return;
     STATE.eq=$('preset-sel').value;
@@ -1063,8 +1227,10 @@ function bindEvents(){
     generate();
   });
 
+  // Generate button
   $('btn-regen').addEventListener('click',function(){generate();});
 
+  // Toggles
   tog('tog-wire','tw-tog','wireframe',function(v){
     if(terrainMesh) terrainMesh.material.wireframe=v;
   });
@@ -1073,11 +1239,23 @@ function bindEvents(){
   });
   tog('tog-cam','tc-tog','autoRotate',function(v){orb.autoRotate=v;});
 
+  // Color inputs
+  ['deep','shallow','sand','grass','forest','rock','snow'].forEach(function(k){
+    var el=$('c-'+k);if(!el)return;
+    el.addEventListener('input',function(){STATE.colors[k]=el.value;});
+  });
+  $('btn-apply-color').addEventListener('click',function(){
+    if(heightCache) buildTerrainMesh(heightCache);
+    toast('Colors Applied','Splat map updated.');
+  });
+
+  // Layers
   $('b-lay').addEventListener('click',function(){addLayer();});
   $('b-lay-clr').addEventListener('click',function(){
     $('lay-con').innerHTML='';STATE.layers=[];
   });
 
+  // Tabs
   document.querySelectorAll('.tab-btn').forEach(function(btn){
     btn.addEventListener('click',function(){
       document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('active');});
@@ -1088,12 +1266,14 @@ function bindEvents(){
     });
   });
 
+  // UI toggle
   $('utog').addEventListener('click',function(){
     var col=!$('terrain-ui').classList.contains('collapsed');
     $('terrain-ui').classList.toggle('collapsed',col);
     $('utog').textContent=col?'':'';
   });
 
+  // Top bar
   $('btn-back-home').addEventListener('click',showHome);
   $('btn-save-proj').addEventListener('click',showSaveModal);
   $('btn-new-proj').addEventListener('click',function(){
@@ -1105,6 +1285,7 @@ function bindEvents(){
     generate();
   });
 
+  // Save modal
   $('save-confirm').addEventListener('click',doSave);
   $('save-cancel').addEventListener('click',hideSaveModal);
   $('proj-name-inp').addEventListener('keydown',function(e){
@@ -1113,6 +1294,7 @@ function bindEvents(){
   });
   $('save-modal').addEventListener('click',function(e){if(e.target===$('save-modal'))hideSaveModal();});
 
+  // Keyboard
   window.addEventListener('keydown',function(e){
     var act=document.activeElement;
     if(act===$('terrain-eq')||act===$('proj-name-inp')){

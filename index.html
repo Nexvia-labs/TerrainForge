@@ -1,126 +1,351 @@
-<!DOCTYPE html>
-<html>
+​<!DOCTYPE html>
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nexvia</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>High-Tech App Interface</title>
+    <style>
+        
+        :root {
+            --bg-base: #09090b;
+            --bg-surface: #18181b;
+            --text-primary: #ffffff;
+            --text-secondary: #a1a1aa;
+            --accent: #3b82f6;
+            --accent-glow: rgba(59, 130, 246, 0.5);
+            --border: rgba(255, 255, 255, 0.08);
+        }
 
-<style>
-body{
-    margin:0;
-    font-family:Arial,sans-serif;
-    background:#0f1117;
-    color:white;
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent; 
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-base);
+            color: var(--text-primary);
+            overflow: hidden; 
+            user-select: none;
+        }
+
+        /* App Shell Layout */
+        .app-container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* Glassmorphic Header */
+        header {
+            padding: 20px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(9, 9, 11, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            z-index: 10;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .greeting h1 {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .greeting p {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        /* Profile Avatar */
+        .avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            box-shadow: 0 4px 12px var(--accent-glow);
+        }
+
+        /* Scrollable Content Area */
+        main {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            padding-bottom: 100px; 
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* High-Tech Animated Card */
+        .animated-card {
+            position: relative;
+            background: var(--bg-surface);
+            border-radius: 24px;
+            padding: 2px; 
+            cursor: pointer;
+            transition: transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Smooth physical tap effect */
+        .animated-card:active {
+            transform: scale(0.96);
+        }
+
+        /* Rotating Gradient Border */
+        .animated-card::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: conic-gradient(
+                transparent, 
+                transparent, 
+                transparent, 
+                #3b82f6, 
+                #06b6d4, 
+                transparent
+            );
+            animation: rotate 4s linear infinite;
+            z-index: 1;
+        }
+
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Inner Card Content */
+        .card-content {
+            position: relative;
+            background: linear-gradient(145deg, #1e1e24, #121215);
+            border-radius: 22px;
+            padding: 28px;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            height: 100%;
+        }
+
+        .card-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            background: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 8px;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .card-content h2 {
+            font-size: 22px;
+            font-weight: 600;
+        }
+
+        .card-content p {
+            color: var(--text-secondary);
+            font-size: 15px;
+            line-height: 1.5;
+        }
+
+        .card-badge {
+            align-self: flex-start;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            margin-top: 8px;
+        }
+
+        /* Native View Overlay (Iframe Container) */
+        .native-view {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-base);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            /* iOS Style Slide-in transition */
+            transform: translateX(100%);
+            transition: transform 0.45s cubic-bezier(0.36, 0.66, 0.04, 1);
+            box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .native-view.active {
+            transform: translateX(0);
+        }
+
+        /* Native View Header */
+        .view-header {
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border);
+            padding-top: max(16px, env(safe-area-inset-top)); 
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            color: var(--accent);
+            font-size: 16px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            padding: 8px 12px 8px 0;
+            transition: opacity 0.2s;
+        }
+
+        .back-btn:active {
+            opacity: 0.6;
+        }
+
+        .view-title {
+            flex: 1;
+            text-align: center;
+            font-size: 17px;
+            font-weight: 600;
+            margin-right: 40px; 
+        }
+
+        /* Iframe */
+        #app-iframe {
+            flex: 1;
+            width: 100%;
+            border: none;
+            background-color: #ffffff; 
+      }
+.center-logo-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 30px; 
+    opacity: 0.35; 
+    pointer-events: none; 
 }
 
-.header{
-    padding:20px;
-    font-size:28px;
-    font-weight:bold;
+.center-logo {
+    width: 100%;    
+    max-width: 100%; 
+    height: auto;     
+    filter: grayscale(100%);
+    display: block;   
 }
 
-.sub{
-    padding:0 20px 20px;
-    color:#aaa;
-}
-
-.apps{
-    padding:20px;
-}
-
-.card{
-    width:300px;
-    background:#1b1f2a;
-    border-radius:16px;
-    padding:20px;
-    cursor:pointer;
-    transition:.2s;
-}
-
-.card:hover{
-    transform:translateY(-4px);
-}
-
-.card h2{
-    margin:0;
-}
-
-.card p{
-    color:#bbb;
-}
-
-#viewer{
-    display:none;
-    position:fixed;
-    inset:0;
-    background:#111;
-}
-
-#viewer iframe{
-    width:100%;
-    height:100%;
-    border:none;
-}
-
-.back{
-    position:absolute;
-    top:15px;
-    left:15px;
-    z-index:10;
-    padding:10px 16px;
-    border:none;
-    border-radius:10px;
-    cursor:pointer;
-}
-</style>
+    </style>
 </head>
-
 <body>
 
-<div id="home">
+    <!-- Main App Homepage -->
+    <div class="app-container">
+        <header>
+            <div class="greeting">
+                <h1>Welcome Back</h1>
+                <p>System environments optimal.</p>
+            </div>
+            <div class="avatar">●</div>
+        </header>
 
-<div class="header">NEXVIA</div>
-
-<div class="sub">
-Experimental Projects
+        <main>
+        
+            <div class="section-title">Active Environments</div>
+            
+            <!-- Animated Trigger Card -->
+            <div class="animated-card" id="open-terrain-btn">
+                <div class="card-content">
+                    <div class="card-icon">✦</div>
+                    <h2>TerrainForge</h2>
+                    <p>Launch the advanced terrain generation module v1.0.0. Features real-time topological mapping.</p>
+                    <div class="card-badge">Version 1.0.0</div>
+                    
+<div class="center-logo-container">
+    <img src="assets/TerrainForgeLogo.png" alt="TerrainForge Logo" class="center-logo">
 </div>
 
-<div class="apps">
 
-<div class="card" onclick="openApp()">
-<h2>TerrainForge v1.0.0</h2>
-<p>
-Procedural terrain generation and exploration.
-</p>
-</div>
+                </div>
+            </div>
+        </main>
+    </div>
 
-</div>
+    <!-- Native Slide-in View (Holds the Iframe) -->
+    <div class="native-view" id="native-view-container">
+        <div class="view-header">
+            <button class="back-btn" id="close-view-btn">
+                <!-- Back Arrow SVG -->
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+                Back
+            </button>
+            <div class="view-title">TerrainForge</div>
+        </div>
+        
+        <!-- The actual embedded file -->
+        <iframe id="app-iframe" src=""></iframe>
+    </div>
 
-</div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const openBtn = document.getElementById('open-terrain-btn');
+            const closeBtn = document.getElementById('close-view-btn');
+            const viewContainer = document.getElementById('native-view-container');
+            const iframe = document.getElementById('app-iframe');
 
-<div id="viewer">
+  
+            openBtn.addEventListener('click', () => {
+     
+                iframe.src = 'TerrainForge-v1.0.0.html';
+                
+                
+                viewContainer.classList.add('active');
+            });
 
-<button class="back" onclick="closeApp()">
-← Home
-</button>
-
-<iframe
-src="TerrainForge-v0.1.0.html">
-</iframe>
-
-</div>
-
-<script>
-function openApp(){
-    document.getElementById("home").style.display="none";
-    document.getElementById("viewer").style.display="block";
-}
-
-function closeApp(){
-    document.getElementById("viewer").style.display="none";
-    document.getElementById("home").style.display="block";
-}
-</script>
-
+            
+            closeBtn.addEventListener('click', () => {
+                
+                viewContainer.classList.remove('active');
+                
+  
+                setTimeout(() => {
+                    iframe.src = '';
+                }, 450);
+            });
+        });
+    </script>
 </body>
-  </html>
+</html>

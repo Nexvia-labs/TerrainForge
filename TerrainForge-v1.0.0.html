@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TerrainForge â€” Procedural Map Builder</title>
+<title>TerrainForge — Procedural Map Builder</title>
 <link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -138,6 +138,19 @@ select option{background:#05101e}
 .lay-row input[type=text]:focus{border-color:var(--ac)}
 .lay-row input[type=text].ie{border-color:var(--er)!important}
 
+/* SPAWN RULES */
+.rule-row{display:flex;gap:6px;align-items:center;background:rgba(0,8,24,.5);
+  border:1px solid rgba(80,145,255,.12);border-radius:7px;padding:6px 10px;flex-wrap:wrap}
+.rule-lbl{font-size:9px;color:var(--t3);font-family:var(--fd);min-width:60px;
+  text-transform:uppercase;letter-spacing:.08em}
+.rule-val{font-family:var(--fm);font-size:9px;color:var(--ac);min-width:28px}
+.swatch{width:12px;height:12px;border-radius:2px;display:inline-block;flex-shrink:0}
+.count-badge{font-family:var(--fm);font-size:9px;padding:1px 6px;
+  background:rgba(80,145,255,.12);border:1px solid rgba(80,145,255,.2);
+  border-radius:4px;color:var(--ac)}
+
+
+
 /* TOGGLE SWITCH */
 .tog-wrap{display:flex;align-items:center;gap:6px;cursor:pointer}
 .tog{width:28px;height:15px;background:rgba(80,145,255,.15);border-radius:8px;
@@ -246,7 +259,7 @@ select option{background:#05101e}
 <div id="loading">
   <div class="spin"></div>
   <h2>TerrainForge</h2>
-  <p>Initialising procedural engineâ€¦</p>
+  <p>Initialising procedural engine…</p>
 </div>
 
 <!-- 3D CANVAS filled by Three.js -->
@@ -257,18 +270,19 @@ select option{background:#05101e}
   <span id="proj-cur-name">Unsaved Map</span>
   <button class="btn sm go" id="btn-regen"> Generate</button>
   <button class="btn sm" id="btn-save-proj"> Save</button>
+  <button class="btn sm" id="btn-export"> PNG</button>
 </div>
 
 <!-- STATS -->
 <div id="terrain-stats">
-  <div class="sr"><span class="sl">Peak Height</span><span class="sv ca" id="s-peak">â€”</span></div>
+  <div class="sr"><span class="sl">Peak Height</span><span class="sv ca" id="s-peak">—</span></div>
 </div>
 
 <!-- GEN PROGRESS -->
 <div id="gen-progress">
-  <h4> Building Terrainâ€¦</h4>
+  <h4> Building Terrain…</h4>
   <div id="prog-bar-wrap"><div id="prog-bar"></div></div>
-  <div id="prog-label">Initialising heightmapâ€¦</div>
+  <div id="prog-label">Initialising heightmap…</div>
 </div>
 
 <!-- TOAST BOX -->
@@ -294,7 +308,7 @@ select option{background:#05101e}
         <input id="terrain-eq" type="text" value="fbm(x,y,6)*3 + ridge(x,y)*1.5" placeholder="fbm(x,y,6)*3 ...">
       </div>
       <select id="preset-sel">
-        <option value="">â€” Presets â€”</option>
+        <option value="">— Presets —</option>
         <option value="fbm(x,y,6)*3 + ridge(x,y)*1.5"> Mountain Range</option>
         <option value="fbm(x,y,4)*2"> Rolling Hills</option>
         <option value="fbm(x*0.5,y*0.5,8)*4 - 0.5"> High Plateau</option>
@@ -348,7 +362,7 @@ select option{background:#05101e}
 
   <!-- COLOR TAB -->
   <div class="tab-pane" id="tab-color">
-    <div class="ph">Splat Map â€” Texture Zones by Height & Slope</div>
+    <div class="ph">Splat Map — Texture Zones by Height & Slope</div>
     <div class="cr">
       <div class="sg">
         <span class="swatch" style="background:#1a6bbd"></span>
@@ -404,7 +418,7 @@ select option{background:#05101e}
 <div id="home-screen">
   <div class="hs-hero">
     <h1> TerrainForge</h1>
-    <p>Build procedural 3D maps using mathematical equations â€” mountains, rivers, forests, and more. Powered by fBm noise and GPU shaders.</p>
+    <p>Build procedural 3D maps using mathematical equations — mountains, rivers, forests, and more. Powered by fBm noise and GPU shaders.</p>
     <div class="hs-badges">
       <span class="badge">fBm Heightmaps</span>
       <span class="badge">Splat Coloring</span>
@@ -424,7 +438,7 @@ select option{background:#05101e}
 <div id="save-modal">
   <div class="modal-box">
     <h3> Save Map</h3>
-    <input id="proj-name-inp" type="text" placeholder="Map nameâ€¦" maxlength="60">
+    <input id="proj-name-inp" type="text" placeholder="Map name…" maxlength="60">
     <div class="modal-btns">
       <button class="btn er sm" id="save-cancel">Cancel</button>
       <button class="btn go sm" id="save-confirm">Save</button>
@@ -436,7 +450,7 @@ select option{background:#05101e}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 // 
-// TERRAINFORGE â€” Procedural 3D Map Builder
+// TERRAINFORGE — Procedural 3D Map Builder
 // Architecture: fBm Heightmap  GPU Mesh  Splat Colors  Spawn
 // 
 
@@ -857,7 +871,7 @@ function generate(showProgress){
   if(showProgress!==false) showGenProgress();
 
   setTimeout(function(){
-    setProgress(10,'Building heightmapâ€¦');
+    setProgress(10,'Building heightmap…');
     gNoise = new SimplexNoise(STATE.seed);
 
     setTimeout(function(){
@@ -865,7 +879,7 @@ function generate(showProgress){
       try{ data=buildHeightmap(); }
       catch(e){ toast('Error','Heightmap failed: '+e.message); hideGenProgress(); generating=false; return; }
       heightCache=data;
-      setProgress(50,'Meshing terrainâ€¦');
+      setProgress(50,'Meshing terrain…');
 
       setTimeout(function(){
         try{ buildTerrainMesh(data); }
@@ -885,7 +899,7 @@ function generate(showProgress){
 
 function showGenProgress(){
   $('gen-progress').style.display='flex';
-  setProgress(0,'Startingâ€¦');
+  setProgress(0,'Starting…');
 }
 function hideGenProgress(){$('gen-progress').style.display='none';}
 function setProgress(pct,label){
@@ -914,10 +928,10 @@ function addLayer(eq,blend,op,on){
   row.innerHTML=
     '<span style="font-family:var(--fm);font-size:9px;color:var(--t3);min-width:18px">L'+STATE.layers.length+'</span>'+
     '<input type="checkbox" '+(on?'checked':'')+' title="Enable layer">'+
-    '<input type="text" class="leq" value="'+escH(eq)+'" placeholder="layer equationâ€¦" style="flex:1">'+
+    '<input type="text" class="leq" value="'+escH(eq)+'" placeholder="layer equation…" style="flex:1">'+
     '<select class="lblend" title="Blend mode">'+
       '<option value="add"'+(blend==='add'?' selected':'')+'>+ Add</option>'+
-      '<option value="multiply"'+(blend==='multiply'?' selected':'')+'>Ã— Mul</option>'+
+      '<option value="multiply"'+(blend==='multiply'?' selected':'')+'>× Mul</option>'+
       '<option value="subtract"'+(blend==='subtract'?' selected':'')+'>- Sub</option>'+
       '<option value="replace"'+(blend==='replace'?' selected':'')+'>= Rep</option>'+
     '</select>'+
@@ -959,6 +973,40 @@ function toast(title,body){
   t.innerHTML='<div class="tt">'+title+'</div><div class="tb">'+body+'</div>';
   $('toast-box').appendChild(t);
   setTimeout(function(){if(t.parentNode)t.remove();},4400);
+}
+
+//  EXPORT PNG 
+var pendExp=false;
+function trigExport(){
+  if(pendExp)return;
+  pendExp=true;
+  $('btn-export').textContent='Capturing…';
+}
+function doExport(){
+  pendExp=false;
+  $('btn-export').textContent=' PNG';
+  try{
+    renderer.render(scene,camera);
+    var cv=document.createElement('canvas');
+    cv.width=renderer.domElement.width; cv.height=renderer.domElement.height;
+    var ctx=cv.getContext('2d');
+    ctx.drawImage(renderer.domElement,0,0);
+    var sc=Math.max(1,cv.width/1440);
+    var gr=ctx.createLinearGradient(0,cv.height*.6,0,cv.height);
+    gr.addColorStop(0,'rgba(3,9,18,0)');gr.addColorStop(1,'rgba(3,9,18,.72)');
+    ctx.fillStyle=gr;ctx.fillRect(0,0,cv.width,cv.height);
+    ctx.fillStyle='rgba(230,242,255,.9)';ctx.font='bold '+Math.round(20*sc)+'px Oxanium,sans-serif';
+    ctx.fillText('TerrainForge',cv.width*.025,cv.height*.055);
+    ctx.font=Math.round(11*sc)+'px JetBrains Mono,monospace';
+    ctx.fillStyle='rgba(88,200,248,.8)';
+    ctx.fillText('h(x,y) = '+STATE.eq.slice(0,60),cv.width*.025,cv.height-.03*cv.height);
+    ctx.textAlign='right';ctx.fillStyle='rgba(88,118,165,.6)';ctx.font=Math.round(9*sc)+'px monospace';
+    ctx.fillText('Seed: '+STATE.seed,cv.width*.975,cv.height*.055);
+    var lnk=document.createElement('a');
+    lnk.download='terrainforge_'+STATE.seed+'_'+Date.now()+'.png';
+    lnk.href=cv.toDataURL('image/png',1);lnk.click();
+    toast('Exported','PNG saved — Seed '+STATE.seed);
+  }catch(e){toast('Export Failed',e.message);}
 }
 
 //  SYNC UI  STATE 
@@ -1093,7 +1141,7 @@ function showHome(){
 }
 
 function fmtDate(ts){
-  if(!ts) return 'â€”';
+  if(!ts) return '—';
   return new Date(ts).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
 }
 
@@ -1116,8 +1164,8 @@ function loadHomeProjects(){
 
 function mkMapCard(proj){
   var card=document.createElement('div');card.className='proj-card';
-  var eq=(proj.state&&proj.state.eq)||'â€”';
-  var eqShort=eq.length>44?eq.slice(0,42)+'â€¦':eq;
+  var eq=(proj.state&&proj.state.eq)||'—';
+  var eqShort=eq.length>44?eq.slice(0,42)+'…':eq;
   var thumb=proj.thumbnail||'';
   card.innerHTML=
     '<div class="proj-thumb">'+
@@ -1126,7 +1174,7 @@ function mkMapCard(proj){
     '</div>'+
     '<div class="proj-info">'+
       '<div class="proj-name">'+escH(proj.name)+'</div>'+
-      '<div class="proj-meta"><span class="proj-meta-lbl">Seed</span><span class="proj-meta-val">'+((proj.state&&proj.state.seed)||'â€”')+'</span></div>'+
+      '<div class="proj-meta"><span class="proj-meta-lbl">Seed</span><span class="proj-meta-val">'+((proj.state&&proj.state.seed)||'—')+'</span></div>'+
       '<div class="proj-meta"><span class="proj-meta-lbl">Updated</span><span class="proj-meta-val">'+fmtDate(proj.updatedAt)+'</span></div>'+
       '<div class="proj-eq"><code>h = '+escH(eqShort)+'</code></div>'+
     '</div>'+
@@ -1276,6 +1324,7 @@ function bindEvents(){
   // Top bar
   $('btn-back-home').addEventListener('click',showHome);
   $('btn-save-proj').addEventListener('click',showSaveModal);
+  $('btn-export').addEventListener('click',trigExport);
   $('btn-new-proj').addEventListener('click',function(){
     currentProjId=null;
     STATE.seed=Math.floor(Math.random()*99999);
@@ -1303,6 +1352,7 @@ function bindEvents(){
     if(e.key===' '){e.preventDefault();orb.autoRotate=!orb.autoRotate;$('tc-tog').classList.toggle('on',orb.autoRotate);}
     if(e.key.toLowerCase()==='g') generate();
     if(e.key.toLowerCase()==='h') $('utog').click();
+    if(e.key.toLowerCase()==='e') trigExport();
     if(e.key.toLowerCase()==='w') $('tog-wire').click();
   });
 }
@@ -1315,6 +1365,7 @@ function animate(){
   gTime+=dt;
   if(orb.autoRotate&&!orb.dragging){orb.theta+=dt*.1;applyCam();}
   renderer.render(scene,camera);
+  if(pendExp){doExport();}
 }
 
 //  INIT 

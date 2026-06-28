@@ -1,12 +1,12 @@
-#TerrainForge v1.0.0
+# TerrainForge v1.0.0
 
 A lightweight offline procedural terrain editor built for experimentation, real-time landscape creation, and low-end hardware compatibility.
 
-TerrainForge allows users to generate and sculpt terrains using mathematical equations, procedural noise functions, brush-based stamping, and GPU-powered shader generation. The project focuses on making terrain creation accessible without requiring powerful hardware, servers, or external dependencies.
+_TerrainForge allows users to generate and sculpt terrains using mathematical equations, procedural noise functions, brush-based stamping, and GPU-powered shader generation. The project focuses on making terrain creation accessible without requiring powerful hardware, servers, or external dependencies._
 
-#Features
+# Features
 
-#Terrain Editing
+# Terrain Editing
 
 - Real-time terrain sculpting
 - Equation-based terrain generation
@@ -14,7 +14,7 @@ TerrainForge allows users to generate and sculpt terrains using mathematical equ
 - Adjustable brush radius
 - Live terrain preview
 
-#Procedural Generation
+# Procedural Generation
 
 - Mathematical terrain functions
 - Simplex noise generation
@@ -22,7 +22,7 @@ TerrainForge allows users to generate and sculpt terrains using mathematical equ
 - Animated wave and ripple presets
 - Custom user-defined equations
 
-#Rendering
+# Rendering
 
 - Interactive 3D terrain visualization
 - Dynamic terrain coloring
@@ -30,7 +30,7 @@ TerrainForge allows users to generate and sculpt terrains using mathematical equ
 - Snow, rock, grass, sand, and water biome coloring
 - Real-time lighting and shadows
 
-#Performance Optimizations
+# Performance Optimizations
 
 - Allocation-free vertex processing
 - Direct typed-array manipulation
@@ -39,7 +39,7 @@ TerrainForge allows users to generate and sculpt terrains using mathematical equ
 - Optimized terrain update pipeline
 - GPU shader mode for global terrain generation
 
-#User Interface
+# User Interface
 
 - Customizable terrain presets
 - Adjustable terrain area size
@@ -47,7 +47,7 @@ TerrainForge allows users to generate and sculpt terrains using mathematical equ
 - Mouse-driven navigation
 - Orbit, pan, and zoom controls
 
-#Controls
+# Controls
 
 Action| Control
 Rotate Camera| Left Click + Drag
@@ -57,7 +57,7 @@ Place Terrain Stamp| PLACE Button
 Clear Terrain| Clear All Stamps
 GPU Mode| Shift to GPU
 
-#Technical Stack
+# Technical Stack
 
 - JavaScript
 - Three.js
@@ -65,7 +65,7 @@ GPU Mode| Shift to GPU
 - WebGL
 - Custom Simplex Noise Implementation
 
-#Design Goals
+# Design Goals
 
 - Fully offline operation
 - Fast terrain generation
@@ -73,10 +73,10 @@ GPU Mode| Shift to GPU
 - Compatibility with low-end devices
 - Easy experimentation with procedural algorithms
 
-#Current Version
+# Current Version
 
-TerrainForge v1.0.0 introduces the foundation of the terrain editing system, including procedural equation stamping, live previews, GPU terrain generation, and performance-focused terrain manipulation.
+_TerrainForge v1.0.0 introduces the foundation of the terrain editing system, including procedural equation stamping, live previews, GPU terrain generation, and performance-focused terrain manipulation._
 
-#License
+# License
 
 MIT License

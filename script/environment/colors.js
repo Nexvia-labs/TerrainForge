@@ -4,7 +4,7 @@
 // snow), using the current palette in STATE.colors.
 // ─────────────────────────────────────────────────────────────────
 
-import { STATE, runtime } from './state.js';
+import { STATE, runtime } from './script/core/state.js';
 
 export function hex2rgb(hex) {
   hex = hex.replace('#', '');

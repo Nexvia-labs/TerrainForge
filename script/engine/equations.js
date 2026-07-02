@@ -1,6 +1,6 @@
 
 
-import { sn, fbmN, ridgeN, domWarp } from './noise.js';
+import { sn, fbmN, ridgeN, domWarp } from './script/engine/noise.js';
 
 // Each builtin returns a function(x,y) -> height
 const _builtins = {

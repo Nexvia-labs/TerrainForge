@@ -1,10 +1,10 @@
-import { STATE, runtime } from './script/core/state.js';
-import { $, escH, fmtDate } from './script/utils/utils.js';
-import { getAllMaps, getMapById, saveMapDB, deleteMapDB } from './script/utils/db.js';
-import { addLayer } from './script/environment/layers.js';
-import { generate } from './script/engine/generator.js';
-import { toast } from './script/utils/toast.js';
-import { syncAllUI } from './script/utils/ui.js';
+import { STATE, runtime } from '../core/state.js';
+import { $, escH, fmtDate } from './utils.js';
+import { getAllMaps, getMapById, saveMapDB, deleteMapDB } from './db.js';
+import { addLayer } from '../environment/layers.js';
+import { generate } from '../engine/generator.js';
+import { toast } from './toast.js';
+import { syncAllUI } from './ui.js';
 
 
 export function captureThumb() {

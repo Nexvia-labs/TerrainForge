@@ -5,15 +5,15 @@
 // with the DOM in both directions.
 // ─────────────────────────────────────────────────────────────────
 
-import { STATE, runtime, DEFAULT_EQUATION } from './script/core/state.js';
-import { $ } from './script/utils/utils.js';
-import { generate } from './script/engine/generator.js';
-import { addLayer } from './script/environment/layers.js';
-import { buildTerrainMesh } from './script/engine/terrain-mesh.js';
-import { buildWater } from './script/environment/water.js';
-import { trigExport } from './script/utils/export.js';
-import { toast } from './script/utils/toast.js';
-import { showHome, showVisualizer, showSaveModal, hideSaveModal, doSave } from './script/utils/projects.js';
+import { STATE, runtime, DEFAULT_EQUATION } from '../core/state.js';
+import { $ } from './utils.js';
+import { generate } from '../engine/generator.js';
+import { addLayer } from '../environment/layers.js';
+import { buildTerrainMesh } from '../engine/terrain-mesh.js';
+import { buildWater } from '../environment/water.js';
+import { trigExport } from './export.js';
+import { toast } from './toast.js';
+import { showHome, showVisualizer, showSaveModal, hideSaveModal, doSave } from './projects.js';
 
 // ── STATE → UI ───────────────────────────────────────────────────
 

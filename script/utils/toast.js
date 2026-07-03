@@ -2,7 +2,7 @@
 // TOAST — small auto-dismissing notification popups
 // ─────────────────────────────────────────────────────────────────
 
-import { $ } from './script/utils/utils.js';
+import { $ } from './utils.js';
 
 export function toast(title, body) {
   const t = document.createElement('div');

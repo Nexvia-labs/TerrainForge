@@ -2,8 +2,8 @@
 // STATS — updates the on-screen peak height / water / biome panel
 // ─────────────────────────────────────────────────────────────────
 
-import { STATE, runtime } from './script/core/state.js';
-import { $ } from './script/utils/utils.js';
+import { STATE, runtime } from '../core/state.js';
+import { $ } from './utils.js';
 
 export function updateStats() {
   $('s-peak').textContent = runtime.zMax.toFixed(2) + 'u';

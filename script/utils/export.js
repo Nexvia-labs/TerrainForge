@@ -1,7 +1,7 @@
 
-import { STATE, runtime } from './script/core/state.js';
-import { $ } from './script/utils/utils.js';
-import { toast } from './script/utils/toast.js';
+import { STATE, runtime } from '../core/state.js';
+import { $ } from './utils.js';
+import { toast } from './toast.js';
 
 export function trigExport() {
   if (runtime.pendingExport) return;

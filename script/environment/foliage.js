@@ -4,8 +4,8 @@
 // hit Generate (there is no seed to reproduce a specific layout).
 // ─────────────────────────────────────────────────────────────────
 
-import { STATE, SURF, runtime } from './script/core/state.js';
-import { $ } from './script/utils/utils.js';
+import { STATE, SURF, runtime } from '../core/state.js';
+import { $ } from '../utils/utils.js';
 
 export function buildTreeGeo() {
   return new THREE.ConeGeometry(0.7, 2, 7);

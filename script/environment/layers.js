@@ -3,9 +3,9 @@
 // heightmap equation (add / multiply / subtract / replace).
 // ─────────────────────────────────────────────────────────────────
 
-import { STATE } from './script/core/state.js';
-import { $, escH } from './script/utils/utils.js';
-import { getEquationFn } from './script/engine/equations.js';
+import { STATE } from '../core/state.js';
+import { $, escH } from '../utils/utils.js';
+import { getEquationFn } from '../engine/equations.js';
 
 let layerIdCounter = 0;
 

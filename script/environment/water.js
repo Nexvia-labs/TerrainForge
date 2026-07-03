@@ -3,8 +3,8 @@
 // animation.
 // ─────────────────────────────────────────────────────────────────
 
-import { STATE, SURF, runtime } from './script/core/state.js';
-import { hex2rgb } from './script/environment/colors.js';
+import { STATE, SURF, runtime } from '../core/state.js';
+import { hex2rgb } from './colors.js';
 
 export function buildWater() {
   const scene = runtime.scene;

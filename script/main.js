@@ -1,10 +1,10 @@
-import { runtime } from './script/core/state.js';
-import { initThree, applyCam } from './script/core/scene.js';
-import { animateWater } from './script/environment/water.js';
-import { doExport } from './script/utils/export.js';
-import { bindEvents, syncAllUI } from './script/utils/ui.js';
-import { showHome } from './script/utils/projects.js';
-import { $ } from './script/utils/utils.js';
+import { runtime } from './core/state.js';
+import { initThree, applyCam } from './core/scene.js';
+import { animateWater } from './environment/water.js';
+import { doExport } from './utils/export.js';
+import { bindEvents, syncAllUI } from './utils/ui.js';
+import { showHome } from './utils/projects.js';
+import { $ } from './utils/utils.js';
 
 let lastT = performance.now();
 

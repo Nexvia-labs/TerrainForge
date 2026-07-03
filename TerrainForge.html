@@ -3,260 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TerrainForge — Procedural Map Builder</title>
+<title>TerrainForge — Procedural Terrain Generator</title>
  
   <meta name="description" content="TerrainForge is an open-source procedural terrain generation engine.">
 
     <meta name="google-site-verification" content="4ev46cIp67B_spEAugnM5-c_6PxDeX1DvkKpMpatFbU" /> 
 <link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<style>
-:root{
-  --bg:rgba(8,18,44,.92);--bg2:rgba(6,14,38,.97);
-  --br:rgba(80,145,255,.22);--brh:rgba(80,145,255,.55);
-  --ac:#58c8f8;--acd:rgba(88,200,248,.65);
-  --go:#eebb55;--god:rgba(238,187,85,.65);
-  --er:#f04466;--ok:#44ddaa;--pu:#c084fc;--gr:#5ef08a;
-  --t1:rgba(230,242,255,.98);--t2:rgba(170,200,235,.88);--t3:rgba(120,160,210,.72);
-  --fd:'Oxanium','Trebuchet MS',sans-serif;
-  --fm:'JetBrains Mono','Courier New',monospace;
-}
-*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{background:#030c1c;font-family:'IBM Plex Sans',system-ui,sans-serif;
-  color:var(--t1);height:100vh;width:100vw;overflow:hidden;cursor:crosshair;user-select:none}
-canvas{display:block;position:fixed;inset:0;z-index:1}
-
-/* LOADING */
-#loading{position:fixed;inset:0;z-index:999;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;background:#030912;gap:14px}
-#loading h2{font-family:var(--fd);font-size:22px;color:var(--ac);letter-spacing:.1em}
-#loading p{font-size:12px;color:var(--t3);font-family:var(--fm)}
-.spin{width:36px;height:36px;border:3px solid rgba(80,145,255,.2);border-top-color:var(--ac);
-  border-radius:50%;animation:sp .8s linear infinite}
-@keyframes sp{to{transform:rotate(360deg)}}
-
-/* TOP BAR */
-#viz-topbar{position:fixed;top:0;left:0;right:0;z-index:100;height:46px;
-  display:none;align-items:center;padding:0 12px;gap:8px;
-  background:rgba(4,10,26,.92);backdrop-filter:blur(16px);
-  border-bottom:1px solid rgba(80,145,255,.18)}
-#proj-cur-name{flex:1;font-family:var(--fd);font-size:13px;font-weight:600;
-  color:var(--t1);text-align:center;letter-spacing:.04em}
-
-/* BUTTONS */
-.btn{font-family:var(--fd);font-size:9.5px;font-weight:600;letter-spacing:.07em;
-  text-transform:uppercase;padding:7px 13px;
-  background:rgba(10,22,55,.85);border:1px solid rgba(80,145,255,.3);
-  border-radius:8px;color:var(--t2);cursor:pointer;transition:all .15s;white-space:nowrap}
-.btn:hover{border-color:var(--brh);color:var(--t1);background:rgba(15,30,75,.95)}
-.btn.am{background:rgba(88,200,248,.13);border-color:var(--ac);color:var(--ac)}
-.btn.go{background:rgba(238,187,85,.12);border-color:var(--go);color:var(--go)}
-.btn.gr{background:rgba(94,240,138,.1);border-color:var(--gr);color:var(--gr)}
-.btn.er{background:rgba(240,68,102,.12);border-color:var(--er);color:var(--er)}
-.btn.sm{padding:5px 9px;font-size:8.5px}
-.btn.pu{background:rgba(192,132,252,.1);border-color:var(--pu);color:var(--pu)}
-
-/* TOASTS */
-#toast-box{position:fixed;top:56px;right:14px;z-index:300;
-  display:flex;flex-direction:column;gap:7px;pointer-events:none}
-.toast{background:rgba(4,11,30,.97);backdrop-filter:blur(18px);
-  border:1px solid rgba(238,187,85,.34);border-radius:10px;
-  padding:11px 14px;animation:tin .42s cubic-bezier(.34,1.56,.64,1),tout .35s ease 3.8s forwards;
-  box-shadow:0 6px 28px rgba(0,0,0,.55);pointer-events:auto;max-width:260px}
-.tt{font-family:var(--fd);font-size:10px;font-weight:600;color:var(--go);margin-bottom:3px;letter-spacing:.06em}
-.tb{font-size:10px;color:var(--t2);line-height:1.5}
-@keyframes tin{from{opacity:0;transform:translateX(18px) scale(.94)}to{opacity:1;transform:none}}
-@keyframes tout{from{opacity:1}to{opacity:0;transform:translateY(-8px)}}
-
-/* STATS PANEL */
-#terrain-stats{position:fixed;top:56px;right:14px;z-index:100;width:188px;
-  padding:11px 13px;display:none;flex-direction:column;gap:3px;
-  background:rgba(8,18,44,.9);backdrop-filter:blur(18px);
-  border:1px solid rgba(80,145,255,.22);border-radius:12px}
-.sr{display:flex;justify-content:space-between;align-items:center;line-height:1.8}
-.sl{color:var(--t2);font-size:9px}
-.sv{font-family:var(--fm);font-size:10px;color:var(--t1);font-weight:500}
-.sv.ca{color:var(--ac)}.sv.cg{color:var(--ok)}.sv.cgo{color:var(--go)}.sv.cp{color:var(--pu)}
-.sdiv{height:1px;background:rgba(80,145,255,.15);margin:4px 0}
-
-/* MAIN UI PANEL */
-#terrain-ui{position:fixed;bottom:13px;left:50%;transform:translateX(-50%);
-  width:96%;max-width:1120px;max-height:72vh;overflow-y:auto;
-  background:rgba(6,14,38,.97);backdrop-filter:blur(22px) saturate(1.4);
-  -webkit-backdrop-filter:blur(22px) saturate(1.4);
-  border:1px solid rgba(80,145,255,.25);border-radius:14px;
-  box-shadow:0 -4px 44px rgba(0,0,0,.55);
-  padding:11px 14px 10px;display:none;flex-direction:column;gap:8px;z-index:100;
-  transition:transform .4s cubic-bezier(.4,0,.2,1),opacity .38s}
-#terrain-ui.collapsed{transform:translateX(-50%) translateY(114%);opacity:0;pointer-events:none}
-#terrain-ui::-webkit-scrollbar{width:3px}
-#terrain-ui::-webkit-scrollbar-thumb{background:rgba(80,145,255,.3);border-radius:2px}
-
-/* TAB SYSTEM */
-.tab-row{display:flex;gap:4px;flex-wrap:wrap}
-.tab-btn{font-family:var(--fd);font-size:9px;font-weight:600;letter-spacing:.06em;
-  text-transform:uppercase;padding:5px 11px;background:rgba(10,22,55,.85);
-  border:1px solid rgba(80,145,255,.18);border-radius:6px;color:var(--t3);
-  cursor:pointer;transition:all .15s;white-space:nowrap}
-.tab-btn.active{background:rgba(88,200,248,.13);border-color:var(--ac);color:var(--ac)}
-.tab-btn:hover:not(.active){border-color:var(--brh);color:var(--t2)}
-.tab-pane{display:none;flex-direction:column;gap:7px}
-.tab-pane.active{display:flex}
-
-/* FORM CONTROLS */
-.sg{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.slbl{font-family:var(--fd);font-size:8px;font-weight:600;color:var(--t3);
-  text-transform:uppercase;letter-spacing:.12em;min-width:80px}
-input[type=range]{width:72px;height:3px;accent-color:var(--ac);cursor:pointer;
-  flex-shrink:0}
-.svs{font-family:var(--fm);font-size:9.5px;color:var(--ac);min-width:34px;text-align:right}
-.cr{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
-.ph{font-family:var(--fd);font-size:8px;font-weight:600;letter-spacing:.18em;
-  text-transform:uppercase;color:var(--t3);padding-bottom:5px;
-  border-bottom:1px solid rgba(80,145,255,.18);margin-bottom:6px}
-.div{height:1px;background:rgba(80,145,255,.15);margin:5px 0}
-
-/* EQUATION INPUT */
-.fw{position:relative;flex:1}
-.fp{position:absolute;left:10px;top:50%;transform:translateY(-50%);
-  font-family:var(--fm);font-size:10px;color:var(--t3);pointer-events:none;z-index:1}
-#terrain-eq{width:100%;padding:10px 12px 10px 56px;font-size:12px;
-  font-family:var(--fm);background:rgba(0,10,28,.75);
-  border:1px solid rgba(80,145,255,.4);color:var(--ac);border-radius:10px;outline:none;
-  transition:border-color .2s}
-#terrain-eq:focus{border-color:var(--ac)}
-#terrain-eq.ie{border-color:var(--er)!important;color:#ff8899!important}
-
-/* PRESET SELECT */
-select{font-family:var(--fd);font-size:9.5px;background:rgba(0,10,28,.85);
-  border:1px solid rgba(80,145,255,.3);color:var(--t2);border-radius:7px;
-  padding:5px 9px;cursor:pointer;outline:none}
-select:hover{border-color:var(--brh)}
-select option{background:#05101e}
-
-/* LAYER ROWS */
-.lay-row{display:flex;align-items:center;gap:5px;background:rgba(0,8,24,.6);
-  border:1px solid rgba(80,145,255,.15);border-radius:8px;padding:6px 9px;flex-wrap:wrap}
-.lay-row input[type=text]{flex:1;min-width:120px;padding:4px 8px;font-family:var(--fm);
-  font-size:10px;background:rgba(0,8,24,.8);border:1px solid rgba(80,145,255,.25);
-  border-radius:5px;color:var(--ac);outline:none}
-.lay-row input[type=text]:focus{border-color:var(--ac)}
-.lay-row input[type=text].ie{border-color:var(--er)!important}
-
-/* SPAWN RULES */
-.rule-row{display:flex;gap:6px;align-items:center;background:rgba(0,8,24,.5);
-  border:1px solid rgba(80,145,255,.12);border-radius:7px;padding:6px 10px;flex-wrap:wrap}
-.rule-lbl{font-size:9px;color:var(--t3);font-family:var(--fd);min-width:60px;
-  text-transform:uppercase;letter-spacing:.08em}
-.rule-val{font-family:var(--fm);font-size:9px;color:var(--ac);min-width:28px}
-.swatch{width:12px;height:12px;border-radius:2px;display:inline-block;flex-shrink:0}
-.count-badge{font-family:var(--fm);font-size:9px;padding:1px 6px;
-  background:rgba(80,145,255,.12);border:1px solid rgba(80,145,255,.2);
-  border-radius:4px;color:var(--ac)}
-
-
-
-/* TOGGLE SWITCH */
-.tog-wrap{display:flex;align-items:center;gap:6px;cursor:pointer}
-.tog{width:28px;height:15px;background:rgba(80,145,255,.15);border-radius:8px;
-  position:relative;transition:background .2s;border:1px solid rgba(80,145,255,.25);cursor:pointer}
-.tog::after{content:'';position:absolute;top:2px;left:2px;width:9px;height:9px;
-  background:var(--t3);border-radius:50%;transition:transform .2s,background .2s}
-.tog.on{background:rgba(88,200,248,.2);border-color:var(--ac)}
-.tog.on::after{transform:translateX(13px);background:var(--ac)}
-.tog-lbl{font-family:var(--fd);font-size:9px;font-weight:600;letter-spacing:.08em;
-  text-transform:uppercase;color:var(--t3)}
-.tog-wrap:hover .tog-lbl{color:var(--t2)}
-
-/* GEN PROGRESS */
-#gen-progress{position:fixed;top:56px;left:50%;transform:translateX(-50%);
-  z-index:200;background:rgba(4,11,30,.97);backdrop-filter:blur(14px);
-  border:1px solid var(--go);border-radius:10px;padding:10px 18px;
-  display:none;flex-direction:column;gap:5px;min-width:220px;align-items:center}
-#gen-progress h4{font-family:var(--fd);font-size:10px;color:var(--go);letter-spacing:.08em}
-#prog-bar-wrap{width:100%;height:5px;background:rgba(80,145,255,.1);
-  border-radius:3px;overflow:hidden}
-#prog-bar{height:100%;background:linear-gradient(90deg,var(--ac),var(--go));
-  border-radius:3px;width:0%;transition:width .15s}
-#prog-label{font-family:var(--fm);font-size:9px;color:var(--t3)}
-
-/* HOME SCREEN */
-#home-screen{position:fixed;inset:0;z-index:200;
-  background:linear-gradient(160deg,#030c1c 0%,#050e24 60%,#040916 100%);
-  display:flex;flex-direction:column;align-items:center;overflow-y:auto;padding:28px 18px 32px}
-.hs-hero{text-align:center;max-width:560px;margin-bottom:30px;padding-top:8px}
-.hs-hero h1{font-family:var(--fd);font-size:32px;font-weight:700;
-  background:linear-gradient(120deg,var(--ac),#a3f,var(--go));
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-  background-clip:text;letter-spacing:.06em;line-height:1.15}
-.hs-hero p{font-size:13px;color:var(--t3);line-height:1.65;margin-top:9px;max-width:440px}
-.hs-badges{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:12px}
-.badge{font-family:var(--fd);font-size:8px;font-weight:600;letter-spacing:.08em;
-  text-transform:uppercase;padding:4px 10px;border-radius:5px;
-  background:rgba(80,145,255,.08);border:1px solid rgba(80,145,255,.22);color:var(--t3)}
-.hs-new{margin-bottom:22px}
-.hs-new .btn{padding:12px 28px;font-size:11px;letter-spacing:.1em;
-  background:linear-gradient(120deg,rgba(88,200,248,.15),rgba(238,187,85,.1));
-  border-color:rgba(88,200,248,.5)}
-.proj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
-  gap:14px;width:100%;max-width:900px}
-.proj-card{background:rgba(8,18,44,.85);border:1px solid rgba(80,145,255,.2);
-  border-radius:12px;overflow:hidden;cursor:pointer;transition:all .2s;
-  box-shadow:0 4px 22px rgba(0,0,0,.5)}
-.proj-card:hover{border-color:rgba(88,200,248,.5);transform:translateY(-2px);
-  box-shadow:0 8px 32px rgba(0,0,0,.65)}
-.proj-thumb{position:relative;height:130px;background:#040c1e;overflow:hidden}
-.proj-thumb img{width:100%;height:100%;object-fit:cover}
-.proj-thumb-placeholder{display:flex;align-items:center;justify-content:center;
-  height:100%;font-size:36px;opacity:.3}
-.proj-thumb-overlay{position:absolute;inset:0;
-  background:linear-gradient(180deg,transparent 55%,rgba(4,10,26,.82))}
-.proj-info{padding:10px 12px 5px}
-.proj-name{font-family:var(--fd);font-size:13px;font-weight:600;color:var(--t1);
-  margin-bottom:5px;text-overflow:ellipsis;overflow:hidden;white-space:nowrap}
-.proj-meta{display:flex;justify-content:space-between;font-size:9px;margin-bottom:2px}
-.proj-meta-lbl{color:var(--t3)}.proj-meta-val{color:var(--t2);font-family:var(--fm)}
-.proj-eq{font-family:var(--fm);font-size:9px;color:var(--t3);margin-top:5px;
-  padding:4px 7px;background:rgba(0,8,24,.6);border-radius:4px;
-  text-overflow:ellipsis;overflow:hidden;white-space:nowrap}
-.proj-actions{display:flex;gap:6px;padding:7px 10px 10px;align-items:center}
-.proj-open{flex:1;font-family:var(--fd);font-size:9.5px;font-weight:600;
-  text-transform:uppercase;letter-spacing:.06em;padding:7px;
-  background:rgba(88,200,248,.1);border:1px solid rgba(88,200,248,.3);
-  border-radius:7px;color:var(--ac);cursor:pointer;transition:all .15s}
-.proj-open:hover{background:rgba(88,200,248,.2)}
-.proj-del{padding:7px 11px;background:rgba(240,68,102,.08);border:1px solid rgba(240,68,102,.25);
-  border-radius:7px;color:var(--er);cursor:pointer;font-size:12px;transition:all .15s}
-.proj-del:hover{background:rgba(240,68,102,.18)}
-.empty-state{grid-column:1/-1;text-align:center;padding:40px 20px;opacity:.7}
-.empty-icon{font-size:42px;margin-bottom:12px}
-.empty-state h3{font-family:var(--fd);font-size:15px;color:var(--t2);margin-bottom:6px}
-.empty-state p{font-size:11px;color:var(--t3);line-height:1.6;max-width:280px;margin:0 auto}
-.hs-proj-title{font-family:var(--fd);font-size:13px;font-weight:600;color:var(--t2);
-  margin-bottom:10px;display:flex;gap:8px;align-items:center}
-.proj-count-badge{font-family:var(--fm);font-size:9.5px;padding:2px 8px;
-  background:rgba(80,145,255,.1);border:1px solid rgba(80,145,255,.2);
-  border-radius:4px;color:var(--ac)}
-
-/* SAVE MODAL */
-#save-modal{position:fixed;inset:0;z-index:500;
-  background:rgba(2,7,20,.82);backdrop-filter:blur(8px);
-  display:none;align-items:center;justify-content:center}
-#save-modal.open{display:flex}
-.modal-box{background:rgba(8,20,52,.98);border:1px solid rgba(80,145,255,.4);
-  border-radius:16px;padding:22px 24px;width:min(360px,90vw);
-  box-shadow:0 16px 56px rgba(0,0,0,.75)}
-.modal-box h3{font-family:var(--fd);font-size:15px;font-weight:600;
-  color:var(--t1);margin-bottom:14px;letter-spacing:.04em}
-.modal-box input{width:100%;padding:10px 13px;font-family:var(--fm);font-size:12px;
-  background:rgba(0,10,28,.8);border:1px solid rgba(80,145,255,.35);
-  color:var(--t1);border-radius:9px;outline:none;margin-bottom:14px}
-.modal-box input:focus{border-color:var(--ac)}
-.modal-btns{display:flex;gap:8px;justify-content:flex-end}
-
-/* TOGGLE BUTTON */
-#utog{position:fixed;bottom:13px;right:14px;z-index:101;padding:9px 12px;
-  font-size:13px;display:none}
-</style>
+<link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
 
@@ -270,21 +23,27 @@ select option{background:#05101e}
 
 <!-- TOP BAR -->
 <div id="viz-topbar">
-  <button class="btn sm" id="btn-back-home"> Home</button>
+  <button class="btn sm" id="btn-back-home">← Home</button>
   <span id="proj-cur-name">Unsaved Map</span>
-  <button class="btn sm go" id="btn-regen"> Generate</button>
-  <button class="btn sm" id="btn-save-proj"> Save</button>
-  <button class="btn sm" id="btn-export"> PNG</button>
+  <button class="btn sm go" id="btn-regen">⚙ Generate</button>
+  <button class="btn sm" id="btn-save-proj">💾 Save</button>
+  <button class="btn sm" id="btn-export">↓ PNG</button>
 </div>
 
 <!-- STATS -->
 <div id="terrain-stats">
   <div class="sr"><span class="sl">Peak Height</span><span class="sv ca" id="s-peak">—</span></div>
+  <div class="sr"><span class="sl">Water Level</span><span class="sv ca" id="s-water">—</span></div>
+  <div class="sr"><span class="sl">Tree Instances</span><span class="sv cg" id="s-trees">0</span></div>
+  <div class="sr"><span class="sl">Rock Instances</span><span class="sv cg" id="s-rocks">0</span></div>
+  <div class="sdiv"></div>
+  <div class="sr"><span class="sl">Biome</span><span class="sv cgo" id="s-biome">—</span></div>
+  <div class="sr"><span class="sl">Coverage</span><span class="sv cp" id="s-cov">—</span></div>
 </div>
 
 <!-- GEN PROGRESS -->
 <div id="gen-progress">
-  <h4> Building Terrain…</h4>
+  <h4>⚙ Building Terrain…</h4>
   <div id="prog-bar-wrap"><div id="prog-bar"></div></div>
   <div id="prog-label">Initialising heightmap…</div>
 </div>
@@ -293,14 +52,16 @@ select option{background:#05101e}
 <div id="toast-box"></div>
 
 <!-- TOGGLE BUTTON -->
-<button class="btn" id="utog"></button>
+<button class="btn" id="utog">▲</button>
 
 <!-- MAIN UI PANEL -->
 <div id="terrain-ui">
   <div class="tab-row">
-    <button class="tab-btn active" data-tab="terrain"> Terrain</button>
-    <button class="tab-btn" data-tab="layers"> Layers</button>
-    <button class="tab-btn" data-tab="color"> Color</button>
+    <button class="tab-btn active" data-tab="terrain">🏔 Terrain</button>
+    <button class="tab-btn" data-tab="water">🌊 Water</button>
+    <button class="tab-btn" data-tab="biomes">🌿 Biomes</button>
+    <button class="tab-btn" data-tab="layers">📐 Layers</button>
+    <button class="tab-btn" data-tab="color">🎨 Color</button>
   </div>
 
   <!-- TERRAIN TAB -->
@@ -313,16 +74,16 @@ select option{background:#05101e}
       </div>
       <select id="preset-sel">
         <option value="">— Presets —</option>
-        <option value="fbm(x,y,6)*3 + ridge(x,y)*1.5"> Mountain Range</option>
-        <option value="fbm(x,y,4)*2"> Rolling Hills</option>
-        <option value="fbm(x*0.5,y*0.5,8)*4 - 0.5"> High Plateau</option>
-        <option value="island(x,y,3.5)"> Tropical Island</option>
-        <option value="canyon(x,y)"> Canyon Lands</option>
-        <option value="volcano(x,y)"> Volcano</option>
-        <option value="fjord(x,y)"> Fjord Coast</option>
-        <option value="mesa(x,y)"> Desert Mesa</option>
-        <option value="archipelago(x,y)"> Archipelago</option>
-        <option value="plains(x,y)"> Flat Plains</option>
+        <option value="fbm(x,y,6)*3 + ridge(x,y)*1.5">🏔 Mountain Range</option>
+        <option value="fbm(x,y,4)*2">🌄 Rolling Hills</option>
+        <option value="fbm(x*0.5,y*0.5,8)*4 - 0.5">🗻 High Plateau</option>
+        <option value="island(x,y,3.5)">🏝 Tropical Island</option>
+        <option value="canyon(x,y)">🪨 Canyon Lands</option>
+        <option value="volcano(x,y)">🌋 Volcano</option>
+        <option value="fjord(x,y)">⛰ Fjord Coast</option>
+        <option value="mesa(x,y)">🟫 Desert Mesa</option>
+        <option value="archipelago(x,y)">🏖 Archipelago</option>
+        <option value="plains(x,y)">🌾 Flat Plains</option>
       </select>
     </div>
     <div class="div"></div>
@@ -354,13 +115,69 @@ select option{background:#05101e}
     </div>
   </div>
 
+  <!-- WATER TAB -->
+  <div class="tab-pane" id="tab-water">
+    <div class="ph">Water & Rivers</div>
+    <div class="cr">
+      <div class="sg"><span class="slbl">Sea Level</span>
+        <input type="range" id="sl-sea" min="-2" max="2" step="0.05" value="0">
+        <span class="svs" id="v-sea">0.00</span></div>
+      <div class="sg"><span class="slbl">Transparency</span>
+        <input type="range" id="sl-walpha" min="0.1" max="0.9" step="0.05" value="0.6">
+        <span class="svs" id="v-walpha">0.60</span></div>
+      <div class="sg"><span class="slbl">Wave Speed</span>
+        <input type="range" id="sl-wsp" min="0" max="2" step="0.05" value="0.4">
+        <span class="svs" id="v-wsp">0.40</span></div>
+      <div class="sg"><span class="slbl">Wave Height</span>
+        <input type="range" id="sl-wh" min="0" max="0.5" step="0.01" value="0.08">
+        <span class="svs" id="v-wh">0.08</span></div>
+    </div>
+    <div class="div"></div>
+    <div class="ph">Rivers (Domain Warping)</div>
+    <div class="cr">
+      <div class="tog-wrap" id="tog-river"><div class="tog" id="tr-tog"></div><span class="tog-lbl">Enable Rivers</span></div>
+      <div class="sg"><span class="slbl">River Depth</span>
+        <input type="range" id="sl-rdepth" min="0.1" max="2" step="0.05" value="0.6">
+        <span class="svs" id="v-rdepth">0.60</span></div>
+      <div class="sg"><span class="slbl">Warp Strength</span>
+        <input type="range" id="sl-rwarp" min="0" max="2" step="0.05" value="0.8">
+        <span class="svs" id="v-rwarp">0.80</span></div>
+    </div>
+  </div>
+
+  <!-- BIOMES TAB -->
+  <div class="tab-pane" id="tab-biomes">
+    <div class="ph">Vegetation & Rocks</div>
+    <div id="spawn-rules"></div>
+    <div class="cr" style="margin-top:6px">
+      <div class="sg"><span class="slbl">Tree Density</span>
+        <input type="range" id="sl-trees" min="0" max="1" step="0.05" value="0.5">
+        <span class="svs" id="v-trees">0.50</span></div>
+      <div class="sg"><span class="slbl">Rock Density</span>
+        <input type="range" id="sl-rocks" min="0" max="1" step="0.05" value="0.3">
+        <span class="svs" id="v-rocks">0.30</span></div>
+      <div class="sg"><span class="slbl">Snow Line</span>
+        <input type="range" id="sl-snow" min="0.4" max="1" step="0.02" value="0.78">
+        <span class="svs" id="v-snow">0.78</span></div>
+      <div class="sg"><span class="slbl">Forest Low</span>
+        <input type="range" id="sl-flo" min="0" max="0.5" step="0.02" value="0.12">
+        <span class="svs" id="v-flo">0.12</span></div>
+      <div class="sg"><span class="slbl">Forest High</span>
+        <input type="range" id="sl-fhi" min="0.2" max="0.9" step="0.02" value="0.62">
+        <span class="svs" id="v-fhi">0.62</span></div>
+      <div class="sg"><span class="slbl">Max Slope</span>
+        <input type="range" id="sl-mslope" min="0.1" max="2" step="0.05" value="0.8">
+        <span class="svs" id="v-mslope">0.80</span></div>
+    </div>
+  </div>
+
   <!-- LAYERS TAB -->
   <div class="tab-pane" id="tab-layers">
     <div class="ph">Mathematical Layers (composited on top of base heightmap)</div>
     <div id="lay-con"></div>
     <div class="cr" style="margin-top:4px">
       <button class="btn sm" id="b-lay">+ Add Layer</button>
-      <button class="btn sm" id="b-lay-clr"> Clear All</button>
+      <button class="btn sm" id="b-lay-clr">✕ Clear All</button>
     </div>
   </div>
 
@@ -412,20 +229,21 @@ select option{background:#05101e}
       <div class="sg"><span class="slbl">Beach Width</span>
         <input type="range" id="sl-beach" min="0.01" max="0.15" step="0.005" value="0.04">
         <span class="svs" id="v-beach">0.040</span></div>
-      <button class="btn sm" id="btn-apply-color"> Apply Colors</button>
+      <button class="btn sm" id="btn-apply-color">↺ Apply Colors</button>
     </div>
   </div>
-
 </div>
 
 <!-- HOME SCREEN -->
 <div id="home-screen">
   <div class="hs-hero">
-    <h1> TerrainForge</h1>
+    <h1>⛰ TerrainForge</h1>
     <p>Build procedural 3D maps using mathematical equations — mountains, rivers, forests, and more. Powered by fBm noise and GPU shaders.</p>
     <div class="hs-badges">
       <span class="badge">fBm Heightmaps</span>
       <span class="badge">Splat Coloring</span>
+      <span class="badge">Tree Spawning</span>
+      <span class="badge">Water & Rivers</span>
       <span class="badge">Equation Layers</span>
     </div>
   </div>
@@ -441,7 +259,7 @@ select option{background:#05101e}
 <!-- SAVE MODAL -->
 <div id="save-modal">
   <div class="modal-box">
-    <h3> Save Map</h3>
+    <h3>💾 Save Map</h3>
     <input id="proj-name-inp" type="text" placeholder="Map name…" maxlength="60">
     <div class="modal-btns">
       <button class="btn er sm" id="save-cancel">Cancel</button>
@@ -450,942 +268,10 @@ select option{background:#05101e}
   </div>
 </div>
 
-<!-- THREE.JS via CDN -->
+<!-- THREE.JS via CDN (classic global script — exposes window.THREE for the modules below) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script>
-// 
-// TERRAINFORGE — Procedural 3D Map Builder
-// Architecture: fBm Heightmap  GPU Mesh  Splat Colors  Spawn
-// 
 
-var $ = function(id){ return document.getElementById(id); };
-
-//  SIMPLEX NOISE (self-contained, no external dep) 
-var SimplexNoise = (function(){
-  function SimplexNoise(seed){
-    seed = seed || 0;
-    this.p = new Uint8Array(256);
-    this.perm = new Uint8Array(512);
-    this.permMod12 = new Uint8Array(512);
-    for(var i=0;i<256;i++) this.p[i]=i;
-    // Seeded shuffle
-    for(var i=255;i>0;i--){
-      seed = (seed * 1664525 + 1013904223) & 0xffffffff;
-      var j = ((seed >>> 16) & 0x7fff) % (i+1);
-      var tmp = this.p[i]; this.p[i]=this.p[j]; this.p[j]=tmp;
-    }
-    for(var i=0;i<512;i++){
-      this.perm[i]=this.p[i&255];
-      this.permMod12[i]=this.perm[i]%12;
-    }
-  }
-  var G2=0.2113248654051871,G3=1/6;
-  var grad3=new Int8Array([1,1,0,-1,1,0,1,-1,0,-1,-1,0,1,0,1,-1,0,1,1,0,-1,-1,0,-1,0,1,1,0,-1,1,0,1,-1,0,-1,1]);
-  SimplexNoise.prototype.noise2D=function(xin,yin){
-    var perm=this.perm,permMod12=this.permMod12;
-    var n0,n1,n2,s=(xin+yin)*0.3660254037844386,i=Math.floor(xin+s),j=Math.floor(yin+s);
-    var t=(i+j)*G2,X0=i-t,Y0=j-t,x0=xin-X0,y0=yin-Y0;
-    var i1,j1;if(x0>y0){i1=1;j1=0;}else{i1=0;j1=1;}
-    var x1=x0-i1+G2,y1=y0-j1+G2,x2=x0-1+2*G2,y2=y0-1+2*G2;
-    var ii=i&255,jj=j&255;
-    var gi0=permMod12[ii+perm[jj]]*3;
-    var gi1=permMod12[ii+i1+perm[jj+j1]]*3;
-    var gi2=permMod12[ii+1+perm[jj+1]]*3;
-    var t0=0.5-x0*x0-y0*y0;
-    if(t0<0)n0=0;else{t0*=t0;n0=t0*t0*(grad3[gi0]*x0+grad3[gi0+1]*y0);}
-    var t1=0.5-x1*x1-y1*y1;
-    if(t1<0)n1=0;else{t1*=t1;n1=t1*t1*(grad3[gi1]*x1+grad3[gi1+1]*y1);}
-    var t2=0.5-x2*x2-y2*y2;
-    if(t2<0)n2=0;else{t2*=t2;n2=t2*t2*(grad3[gi2]*x2+grad3[gi2+1]*y2);}
-    return 70*(n0+n1+n2);
-  };
-  return SimplexNoise;
-})();
-
-//  THREE.JS SETUP 
-var renderer, camera, scene;
-var terrainMesh;
-var orb = { theta:-2.2, phi:1.0, radius:32, dragging:false, autoRotate:true };
-var _mx=0,_my=0,_bx=0,_by=0;
-
-function initThree(){
-  renderer = new THREE.WebGLRenderer({antialias:true, preserveDrawingBuffer:true, alpha:false});
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
-  renderer.setSize(window.innerWidth,window.innerHeight);
-  renderer.shadowMap.enabled = true;
-  document.body.appendChild(renderer.domElement);
-  renderer.domElement.style.zIndex='1';
-
-  camera = new THREE.PerspectiveCamera(55, window.innerWidth/window.innerHeight, 0.1, 600);
-  applyCam();
-
-  scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x080e1e);
-  scene.fog = new THREE.FogExp2(0x080e1e, 0.018);
-
-  // Lights
-  var amb = new THREE.AmbientLight(0x334466, 1.2); scene.add(amb);
-  var sun = new THREE.DirectionalLight(0xfff5dd, 2.2);
-  sun.position.set(18,28,16); sun.castShadow=true; scene.add(sun);
-  var fill = new THREE.DirectionalLight(0x4488cc, 0.4);
-  fill.position.set(-12,8,-20); scene.add(fill);
-
-  // Orbit controls (manual)
-  var el = renderer.domElement;
-  el.addEventListener('mousedown',function(e){
-    orb.dragging=true;orb.autoRotate=false;_mx=e.clientX;_my=e.clientY;
-    tcTogOff();
-  });
-  window.addEventListener('mouseup',function(){orb.dragging=false;});
-  window.addEventListener('mousemove',function(e){
-    if(!orb.dragging)return;
-    orb.theta-=(e.clientX-_mx)*.007;
-    orb.phi = Math.max(.15,Math.min(1.45,orb.phi+(e.clientY-_my)*.005));
-    _mx=e.clientX;_my=e.clientY;applyCam();
-  });
-  el.addEventListener('touchstart',function(e){
-    orb.dragging=true;orb.autoRotate=false;tcTogOff();
-    _bx=e.touches[0].clientX;_by=e.touches[0].clientY;
-  },{passive:true});
-  window.addEventListener('touchend',function(){orb.dragging=false;});
-  window.addEventListener('touchmove',function(e){
-    if(!orb.dragging)return;
-    orb.theta-=(e.touches[0].clientX-_bx)*.007;
-    orb.phi = Math.max(.15,Math.min(1.45,orb.phi+(e.touches[0].clientY-_by)*.005));
-    _bx=e.touches[0].clientX;_by=e.touches[0].clientY;applyCam();
-  },{passive:true});
-  el.addEventListener('wheel',function(e){
-    orb.radius = Math.max(8,Math.min(80,orb.radius+e.deltaY*.04));
-    applyCam();
-  },{passive:true});
-  window.addEventListener('resize',function(){
-    camera.aspect=window.innerWidth/window.innerHeight;camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth,window.innerHeight);
-  });
-}
-function applyCam(){
-  var sp=Math.sin(orb.phi),cp=Math.cos(orb.phi);
-  var st=Math.sin(orb.theta),ct=Math.cos(orb.theta);
-  camera.position.set(orb.radius*sp*st, orb.radius*cp, orb.radius*sp*ct);
-  camera.lookAt(0,0,0);
-}
-function tcTogOff(){
-  orb.autoRotate=false;
-  var t=$('tc-tog');if(t)t.classList.remove('on');
-}
-
-//  STATE 
-var STATE = {
-  eq: 'fbm(x,y,6)*3 + ridge(x,y)*1.5',
-  scale: 1.0, amp: 2.0, oct: 6, rough: 0.5,
-  res: 128, erosion: 0.0,
-  colors:{deep:'#1a6bbd',shallow:'#3d8fd4',sand:'#e6c97a',grass:'#4a9e3f',
-          forest:'#2d6b24',rock:'#8a7d6e',snow:'#e8eef2'},
-  cBlend:0.08, beachW:0.04,
-  wireframe:false, flatShade:false,
-  seed: 42, layers: [],
-  autoRotate: true
-};
-
-// Internal constants (not user-configurable)
-var SEA_LEVEL = 0.0;
-var SNOW_LINE = 0.78;
-var FOREST_LO = 0.12;
-var FOREST_HI = 0.62;
-
-var gNoise = new SimplexNoise(42);
-var gTime = 0;
-var heightCache = null; // last generated heightmap
-var zMin=0,zMax=1;
-
-//  NOISE LIBRARY 
-function sn(x,y){ return gNoise.noise2D(x,y); }
-
-function fbmN(x,y,oct,rough){
-  oct = oct||6; rough = rough||STATE.rough;
-  var val=0,amp=0.5,freq=1,max=0;
-  for(var i=0;i<oct;i++){
-    val += sn(x*freq,y*freq)*amp;
-    max += amp; amp*=rough; freq*=2.0;
-  }
-  return val/max;
-}
-function ridgeN(x,y){
-  var val=0,amp=0.5,freq=1,max=0;
-  for(var i=0;i<6;i++){
-    var v=1-Math.abs(sn(x*freq,y*freq));
-    v=v*v; val+=v*amp; max+=amp; amp*=0.5; freq*=2;
-  }
-  return val/max;
-}
-function domWarp(x,y,s){
-  var wx=x+s*sn(x+1.7,y+9.2);
-  var wy=y+s*sn(x+8.3,y+2.8);
-  return sn(wx,wy);
-}
-
-//  BUILTIN MAP GENERATORS 
-// Each returns a function(x,y) -> height
-// Built-in map helpers (referenced by equation strings)
-var _builtins = {
-  island: function(x,y,r){
-    r=r||3.5;
-    var d=Math.sqrt(x*x+y*y);
-    var mask=Math.max(0,1-d/r);
-    mask=mask*mask*(3-2*mask);
-    return fbmN(x,y,6)*2.5*mask-(1-mask)*0.5;
-  },
-  canyon: function(x,y){
-    var base=fbmN(x*0.5,y*0.5,5)*3;
-    var cut=Math.abs(sn(x*0.8,y*0.3+10))*2.5;
-    return Math.max(0,base-cut);
-  },
-  volcano: function(x,y){
-    var d=Math.sqrt(x*x+y*y);
-    var cone=Math.max(0,2-d)*1.4;
-    var crater=d<0.8?-1.5+d*2:0;
-    return cone+crater+fbmN(x,y,4)*0.4;
-  },
-  fjord: function(x,y){
-    var base=fbmN(x*0.7,y*0.7,6)*3;
-    var cut=Math.max(0,1.5-Math.abs(sn(x*0.4,y*0.2)*3))*1.8;
-    return base-cut;
-  },
-  mesa: function(x,y){
-    var h=fbmN(x*0.6,y*0.6,4)*2.5;
-    return Math.floor(h*4)/4+fbmN(x*3,y*3,2)*0.15;
-  },
-  archipelago: function(x,y){
-    return sn(x*0.4,y*0.4)*3+fbmN(x,y,5)*1.5-0.8;
-  },
-  plains: function(x,y){
-    return fbmN(x*0.5,y*0.5,3)*0.6+fbmN(x*2,y*2,2)*0.15;
-  }
-};
-
-function getEquationFn(eq){
-  // Build a Function so we avoid with() (forbidden in strict mode)
-  // Inject all helpers as named parameters
-  var fn;
-  try {
-    fn = new Function(
-      'x','y','t',
-      // Math
-      'sin','cos','tan','abs','sqrt','pow','floor','ceil','round','max','min','log','exp','PI',
-      // Terrain helpers
-      'fbm','ridge','noise','dist','warp',
-      'island','canyon','volcano','fjord','mesa','archipelago','plains',
-      'return (' + eq + ');'
-    );
-  } catch(e) {
-    return function(){ return 0; };
-  }
-  return function(x, y, t) {
-    try {
-      return fn(
-        x, y, t||0,
-        Math.sin, Math.cos, Math.tan, Math.abs, Math.sqrt, Math.pow,
-        Math.floor, Math.ceil, Math.round, Math.max, Math.min, Math.log, Math.exp, Math.PI,
-        function(a,b,o,r){ return fbmN(a,b,o,r); },
-        function(a,b){ return ridgeN(a,b); },
-        function(a,b){ return sn(a,b); },
-        function(a,b,cx,cy){ return Math.sqrt(Math.pow(a-(cx||0),2)+Math.pow(b-(cy||0),2)); },
-        function(a,b,s){ return domWarp(a,b,s||0.8); },
-        _builtins.island, _builtins.canyon, _builtins.volcano,
-        _builtins.fjord, _builtins.mesa, _builtins.archipelago, _builtins.plains
-      );
-    } catch(e) { return 0; }
-  };
-}
-
-//  HEIGHTMAP GENERATION 
-var SURF = 20; // world units
-
-function buildHeightmap(){
-  var res = STATE.res;
-  var GRID = res+1;
-  var VC = GRID*GRID;
-  var eq = getEquationFn(STATE.eq);
-  var scl = STATE.scale, amp = STATE.amp;
-  var hmap = new Float32Array(VC);
-  var s = SURF/res;
-
-  for(var j=0;j<GRID;j++){
-    for(var i=0;i<GRID;i++){
-      var wx=(i-res/2)*s*scl, wy=(j-res/2)*s*scl;
-      // Base heightmap
-      var h=eq(wx,wy,0)*amp;
-      // Layer compositing
-      for(var li=0;li<STATE.layers.length;li++){
-        var lay=STATE.layers[li];
-        if(!lay.on||!lay.fn)continue;
-        var lh=lay.fn(wx,wy,0)*lay.op;
-        if(lay.blend==='add')h+=lh;
-        else if(lay.blend==='multiply')h*=(1+lh*.3);
-        else if(lay.blend==='subtract')h-=lh;
-        else if(lay.blend==='replace')h=h*(1-lay.op)+lay.fn(wx,wy,0)*lay.op;
-      }
-      hmap[j*GRID+i]=h;
-    }
-  }
-  // Hydraulic erosion pass
-  if(STATE.erosion>0.01) hmap=erode(hmap,GRID,STATE.erosion);
-  // Normalise
-  zMin=Infinity; zMax=-Infinity;
-  for(var i=0;i<VC;i++){if(hmap[i]<zMin)zMin=hmap[i];if(hmap[i]>zMax)zMax=hmap[i];}
-  return{hmap:hmap,GRID:GRID,s:s};
-}
-
-// Simple erosion
-function erode(hmap,G,str){
-  var out=new Float32Array(hmap.length);
-  for(var j=0;j<G;j++){
-    for(var i=0;i<G;i++){
-      var c=hmap[j*G+i];
-      var n=j>0?hmap[(j-1)*G+i]:c;
-      var s2=j<G-1?hmap[(j+1)*G+i]:c;
-      var ww=i>0?hmap[j*G+i-1]:c;
-      var e=i<G-1?hmap[j*G+i+1]:c;
-      var laplace=(n+s2+ww+e-4*c)*.25;
-      out[j*G+i]=c+laplace*str*.3;
-    }
-  }
-  return out;
-}
-
-//  SPLAT COLORING 
-function hex2rgb(hex){
-  hex=hex.replace('#','');
-  return[parseInt(hex.slice(0,2),16)/255,parseInt(hex.slice(2,4),16)/255,parseInt(hex.slice(4,6),16)/255];
-}
-function lerp3(a,b,t){return[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t];}
-function smooth(x,e0,e1){var t=Math.max(0,Math.min(1,(x-e0)/(e1-e0)));return t*t*(3-2*t);}
-
-function splatColor(hn, slope){
-  // hn = normalised height [0..1], slope [0..1]
-  var c=STATE.colors, sb=SEA_LEVEL, bw=STATE.beachW, bl=STATE.cBlend;
-  var seaN=(sb-zMin)/(zMax-zMin); // normalised sea level
-  var cDeep=hex2rgb(c.deep);
-  var cShallow=hex2rgb(c.shallow);
-  var cSand=hex2rgb(c.sand);
-  var cGrass=hex2rgb(c.grass);
-  var cForest=hex2rgb(c.forest);
-  var cRock=hex2rgb(c.rock);
-  var cSnow=hex2rgb(c.snow);
-
-  var rgb;
-  if(hn<seaN-bw){
-    // Deep water
-    rgb=lerp3(cDeep,cShallow,smooth(hn,seaN-bw*3,seaN-bw));
-  } else if(hn<seaN+bw){
-    // Beach transition
-    var bt=smooth(hn,seaN-bw,seaN+bw);
-    rgb=lerp3(cSand, hn<seaN?cShallow:cGrass, bt<0.5?bt*2:1);
-    if(hn<seaN) rgb=lerp3(cSand,cShallow,smooth(hn,seaN-bw,seaN));
-    else rgb=lerp3(cSand,cGrass,smooth(hn,seaN,seaN+bw));
-  } else {
-    // Land biomes
-    var sn2=SNOW_LINE, flo=FOREST_LO+seaN, fhi=FOREST_HI;
-    if(hn>sn2){
-      rgb=lerp3(cRock,cSnow,smooth(hn,sn2,sn2+bl));
-    } else if(slope>0.55){
-      rgb=lerp3(cGrass,cRock,smooth(slope,0.5,0.75));
-    } else if(hn>fhi){
-      rgb=lerp3(cForest,cRock,smooth(hn,fhi,fhi+bl));
-    } else if(hn>flo){
-      rgb=lerp3(cGrass,cForest,smooth(hn,flo,fhi));
-    } else {
-      rgb=lerp3(cSand,cGrass,smooth(hn,seaN+bw,flo+bl));
-    }
-  }
-  return rgb;
-}
-
-//  BUILD TERRAIN MESH 
-function buildTerrainMesh(data){
-  if(terrainMesh){scene.remove(terrainMesh);terrainMesh.geometry.dispose();terrainMesh.material.dispose();}
-  var hmap=data.hmap, GRID=data.GRID, s=data.s;
-  var res=GRID-1;
-  var geo=new THREE.BufferGeometry();
-  var VC=GRID*GRID;
-  var pos=new Float32Array(VC*3);
-  var col=new Float32Array(VC*3);
-  var uv=new Float32Array(VC*2);
-
-  for(var j=0;j<GRID;j++){
-    for(var i=0;i<GRID;i++){
-      var idx=j*GRID+i;
-      var wx=(i-res/2)*s, wy=(j-res/2)*s;
-      var h=hmap[idx];
-      pos[idx*3]=wx; pos[idx*3+1]=h; pos[idx*3+2]=wy;
-      uv[idx*2]=i/res; uv[idx*2+1]=j/res;
-    }
-  }
-  // Compute slope from normals (rough approx)
-  var slopes=new Float32Array(VC);
-  for(var j=1;j<GRID-1;j++){
-    for(var i=1;i<GRID-1;i++){
-      var idx=j*GRID+i;
-      var dx=hmap[idx+1]-hmap[idx-1];
-      var dz=hmap[idx+GRID]-hmap[idx-GRID];
-      slopes[idx]=Math.sqrt(dx*dx+dz*dz)/(s*2);
-    }
-  }
-  var zRng=zMax-zMin||1;
-  for(var k=0;k<VC;k++){
-    var hn=(hmap[k]-zMin)/zRng;
-    var sl=Math.min(1,slopes[k]);
-    var rgb=splatColor(hn,sl);
-    col[k*3]=rgb[0]; col[k*3+1]=rgb[1]; col[k*3+2]=rgb[2];
-  }
-  // Indices
-  var idxBuf=new Uint32Array(res*res*6);
-  var p=0;
-  for(var j=0;j<res;j++){
-    for(var i=0;i<res;i++){
-      var a=j*GRID+i, b=a+1, c=a+GRID, d=c+1;
-      idxBuf[p++]=a; idxBuf[p++]=c; idxBuf[p++]=b;
-      idxBuf[p++]=b; idxBuf[p++]=c; idxBuf[p++]=d;
-    }
-  }
-  geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
-  geo.setAttribute('color',new THREE.BufferAttribute(col,3));
-  geo.setAttribute('uv',new THREE.BufferAttribute(uv,2));
-  geo.setIndex(new THREE.BufferAttribute(idxBuf,1));
-  geo.computeVertexNormals();
-
-  var mat=new THREE.MeshStandardMaterial({
-    vertexColors:true, roughness:0.9, metalness:0.0,
-    wireframe:STATE.wireframe, flatShading:STATE.flatShade,
-    side:THREE.FrontSide
-  });
-  terrainMesh=new THREE.Mesh(geo,mat);
-  terrainMesh.receiveShadow=true;
-  terrainMesh.castShadow=false;
-  scene.add(terrainMesh);
-  return slopes;
-}
-
-//  MAIN GENERATE FUNCTION 
-var generating=false;
-
-function generate(showProgress){
-  if(generating) return;
-  generating=true;
-  if(showProgress!==false) showGenProgress();
-
-  setTimeout(function(){
-    setProgress(10,'Building heightmap…');
-    gNoise = new SimplexNoise(STATE.seed);
-
-    setTimeout(function(){
-      var data;
-      try{ data=buildHeightmap(); }
-      catch(e){ toast('Error','Heightmap failed: '+e.message); hideGenProgress(); generating=false; return; }
-      heightCache=data;
-      setProgress(50,'Meshing terrain…');
-
-      setTimeout(function(){
-        try{ buildTerrainMesh(data); }
-        catch(e){ toast('Error','Mesh failed: '+e.message); hideGenProgress(); generating=false; return; }
-        setProgress(100,'Done!');
-        updateStats();
-
-        setTimeout(function(){
-          hideGenProgress();
-          generating=false;
-          toast('Terrain Built','Seed '+STATE.seed+'.');
-        },350);
-      },10);
-    },10);
-  },40);
-}
-
-function showGenProgress(){
-  $('gen-progress').style.display='flex';
-  setProgress(0,'Starting…');
-}
-function hideGenProgress(){$('gen-progress').style.display='none';}
-function setProgress(pct,label){
-  $('prog-bar').style.width=pct+'%';
-  $('prog-label').textContent=label;
-}
-
-//  STATS 
-function updateStats(){
-  $('s-peak').textContent=zMax.toFixed(2)+'u';
-}
-
-//  LAYERS 
-var layN=0;
-
-function addLayer(eq,blend,op,on){
-  eq=eq||'fbm(x*2,y*2,4)*0.5';
-  blend=blend||'add'; op=op!=null?op:1.0; on=on!=null?on:true;
-  var id=++layN;
-  var fn=null;
-  try{fn=getEquationFn(eq);}catch(e){}
-  var lay={id:id,eq:eq,blend:blend,op:op,on:on,fn:fn};
-  STATE.layers.push(lay);
-  var row=document.createElement('div');
-  row.className='lay-row'; row.dataset.lid=id;
-  row.innerHTML=
-    '<span style="font-family:var(--fm);font-size:9px;color:var(--t3);min-width:18px">L'+STATE.layers.length+'</span>'+
-    '<input type="checkbox" '+(on?'checked':'')+' title="Enable layer">'+
-    '<input type="text" class="leq" value="'+escH(eq)+'" placeholder="layer equation…" style="flex:1">'+
-    '<select class="lblend" title="Blend mode">'+
-      '<option value="add"'+(blend==='add'?' selected':'')+'>+ Add</option>'+
-      '<option value="multiply"'+(blend==='multiply'?' selected':'')+'>× Mul</option>'+
-      '<option value="subtract"'+(blend==='subtract'?' selected':'')+'>- Sub</option>'+
-      '<option value="replace"'+(blend==='replace'?' selected':'')+'>= Rep</option>'+
-    '</select>'+
-    '<input type="range" class="lop" min="0" max="2" step="0.05" value="'+op+'">'+
-    '<span class="svs lop-v">'+op.toFixed(2)+'</span>'+
-    '<button class="btn sm er lrm" title="Remove"></button>';
-  var eqIn=row.querySelector('.leq');
-  var chk=row.querySelector('input[type=checkbox]');
-  var blSel=row.querySelector('.lblend');
-  var opR=row.querySelector('.lop');
-  var opV=row.querySelector('.lop-v');
-  eqIn.addEventListener('input',function(){
-    lay.eq=eqIn.value;
-    try{lay.fn=getEquationFn(eqIn.value);eqIn.style.borderColor='';}
-    catch(e){lay.fn=null;eqIn.style.borderColor='var(--er)';}
-  });
-  chk.addEventListener('change',function(){lay.on=chk.checked;});
-  blSel.addEventListener('change',function(){lay.blend=blSel.value;});
-  opR.addEventListener('input',function(){lay.op=parseFloat(opR.value);opV.textContent=lay.op.toFixed(2);});
-  row.querySelector('.lrm').addEventListener('click',function(){
-    STATE.layers=STATE.layers.filter(function(l){return l.id!==id;});
-    row.remove();renumLayers();
-  });
-  $('lay-con').appendChild(row);
-  renumLayers();
-}
-
-function renumLayers(){
-  var rows=$('lay-con').querySelectorAll('.lay-row');
-  rows.forEach(function(r,i){
-    var sp=r.querySelector('span');
-    if(sp) sp.textContent='L'+(i+1);
-  });
-}
-
-//  TOAST 
-function toast(title,body){
-  var t=document.createElement('div');t.className='toast';
-  t.innerHTML='<div class="tt">'+title+'</div><div class="tb">'+body+'</div>';
-  $('toast-box').appendChild(t);
-  setTimeout(function(){if(t.parentNode)t.remove();},4400);
-}
-
-//  EXPORT PNG 
-var pendExp=false;
-function trigExport(){
-  if(pendExp)return;
-  pendExp=true;
-  $('btn-export').textContent='Capturing…';
-}
-function doExport(){
-  pendExp=false;
-  $('btn-export').textContent=' PNG';
-  try{
-    renderer.render(scene,camera);
-    var cv=document.createElement('canvas');
-    cv.width=renderer.domElement.width; cv.height=renderer.domElement.height;
-    var ctx=cv.getContext('2d');
-    ctx.drawImage(renderer.domElement,0,0);
-    var sc=Math.max(1,cv.width/1440);
-    var gr=ctx.createLinearGradient(0,cv.height*.6,0,cv.height);
-    gr.addColorStop(0,'rgba(3,9,18,0)');gr.addColorStop(1,'rgba(3,9,18,.72)');
-    ctx.fillStyle=gr;ctx.fillRect(0,0,cv.width,cv.height);
-    ctx.fillStyle='rgba(230,242,255,.9)';ctx.font='bold '+Math.round(20*sc)+'px Oxanium,sans-serif';
-    ctx.fillText('TerrainForge',cv.width*.025,cv.height*.055);
-    ctx.font=Math.round(11*sc)+'px JetBrains Mono,monospace';
-    ctx.fillStyle='rgba(88,200,248,.8)';
-    ctx.fillText('h(x,y) = '+STATE.eq.slice(0,60),cv.width*.025,cv.height-.03*cv.height);
-    ctx.textAlign='right';ctx.fillStyle='rgba(88,118,165,.6)';ctx.font=Math.round(9*sc)+'px monospace';
-    ctx.fillText('Seed: '+STATE.seed,cv.width*.975,cv.height*.055);
-    var lnk=document.createElement('a');
-    lnk.download='terrainforge_'+STATE.seed+'_'+Date.now()+'.png';
-    lnk.href=cv.toDataURL('image/png',1);lnk.click();
-    toast('Exported','PNG saved — Seed '+STATE.seed);
-  }catch(e){toast('Export Failed',e.message);}
-}
-
-//  SYNC UI  STATE 
-function sl(id,key,fmt){
-  var el=$(id); if(!el) return;
-  el.addEventListener('input',function(){
-    STATE[key]=parseFloat(el.value);
-    var vEl=$('v-'+id.replace('sl-',''));
-    if(vEl) vEl.textContent=fmt?parseFloat(el.value).toFixed(fmt):el.value;
-  });
-}
-function tog(wrapId,togId,key,cb){
-  var wrap=$(wrapId), tog=$(togId); if(!wrap||!tog) return;
-  wrap.addEventListener('click',function(){
-    STATE[key]=!STATE[key];
-    tog.classList.toggle('on',STATE[key]);
-    if(cb) cb(STATE[key]);
-  });
-  tog.classList.toggle('on',STATE[key]);
-}
-
-function syncAllUI(){
-  function sv(id,v){ var e=$(id);if(e)e.value=v; }
-  function svt(id,v){ var e=$(id);if(e)e.textContent=v; }
-  sv('terrain-eq',STATE.eq);
-  sv('sl-scale',STATE.scale); svt('v-scale',STATE.scale.toFixed(2));
-  sv('sl-amp',STATE.amp); svt('v-amp',STATE.amp.toFixed(1));
-  sv('sl-oct',STATE.oct); svt('v-oct',STATE.oct);
-  sv('sl-rough',STATE.rough); svt('v-rough',STATE.rough.toFixed(2));
-  sv('sl-res',STATE.res); svt('v-res',STATE.res);
-  sv('sl-ero',STATE.erosion); svt('v-ero',STATE.erosion.toFixed(2));
-  sv('sl-cblend',STATE.cBlend); svt('v-cblend',STATE.cBlend.toFixed(2));
-  sv('sl-beach',STATE.beachW); svt('v-beach',STATE.beachW.toFixed(3));
-  // Colors
-  Object.keys(STATE.colors).forEach(function(k){
-    var e=$('c-'+k);if(e)e.value=STATE.colors[k];
-  });
-  $('tc-tog').classList.toggle('on',STATE.autoRotate);
-  $('tw-tog').classList.toggle('on',STATE.wireframe);
-  $('tf-tog').classList.toggle('on',STATE.flatShade);
-}
-
-function escH(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-
-//  CAPTURE / RESTORE (IndexedDB) 
-var IDB=null;
-var DB_NAME='TerrainForgeDB', DB_VER=1, DB_STORE='maps';
-var currentProjId=null;
-
-function openDB(cb){
-  if(IDB){cb(IDB);return;}
-  var req=indexedDB.open(DB_NAME,DB_VER);
-  req.onupgradeneeded=function(e){
-    var db=e.target.result;
-    if(!db.objectStoreNames.contains(DB_STORE))
-      db.createObjectStore(DB_STORE,{keyPath:'id',autoIncrement:true});
-  };
-  req.onsuccess=function(e){IDB=e.target.result;cb(IDB);};
-  req.onerror=function(e){console.error('IDB',e);};
-}
-function getAllMaps(cb){
-  openDB(function(db){
-    var req=db.transaction(DB_STORE,'readonly').objectStore(DB_STORE).getAll();
-    req.onsuccess=function(e){cb(e.target.result||[]);};
-    req.onerror=function(){cb([]);};
-  });
-}
-function getMapById(id,cb){
-  openDB(function(db){
-    var req=db.transaction(DB_STORE,'readonly').objectStore(DB_STORE).get(id);
-    req.onsuccess=function(e){cb(e.target.result||null);};
-    req.onerror=function(){cb(null);};
-  });
-}
-function saveMapDB(proj,cb){
-  openDB(function(db){
-    var req=db.transaction(DB_STORE,'readwrite').objectStore(DB_STORE).put(proj);
-    req.onsuccess=function(e){cb&&cb(e.target.result);};
-    req.onerror=function(e){console.error('Save',e);};
-  });
-}
-function deleteMapDB(id,cb){
-  openDB(function(db){
-    var req=db.transaction(DB_STORE,'readwrite').objectStore(DB_STORE).delete(id);
-    req.onsuccess=function(){cb&&cb();};
-    req.onerror=function(e){console.error('Del',e);};
-  });
-}
-
-function captureThumb(){
-  try{
-    var th=document.createElement('canvas');th.width=320;th.height=180;
-    renderer.render(scene,camera);
-    th.getContext('2d').drawImage(renderer.domElement,0,0,320,180);
-    return th.toDataURL('image/jpeg',0.78);
-  }catch(e){return '';}
-}
-function captureState(){
-  return JSON.parse(JSON.stringify(STATE));
-}
-function restoreState(st){
-  if(!st) return;
-  Object.assign(STATE,st);
-  syncAllUI();
-  // Restore layers
-  $('lay-con').innerHTML='';STATE.layers=[];
-  if(st.layers&&st.layers.length){
-    st.layers.forEach(function(l){addLayer(l.eq,l.blend,l.op,l.on);});
-  }
-  generate();
-}
-
-//  HOME / VISUALIZER SCREENS 
-var VIZ_IDS=['terrain-stats','terrain-ui','utog','viz-topbar'];
-
-function showVisualizer(name){
-  $('home-screen').style.display='none';
-  $('viz-topbar').style.display='flex';
-  $('terrain-stats').style.display='flex';
-  $('terrain-ui').style.display='flex';
-  $('utog').style.display='flex';
-  $('proj-cur-name').textContent=name||'Unsaved Map';
-}
-function showHome(){
-  $('home-screen').style.display='flex';
-  $('viz-topbar').style.display='none';
-  $('terrain-stats').style.display='none';
-  $('terrain-ui').style.display='none';
-  $('utog').style.display='none';
-  currentProjId=null;
-  loadHomeProjects();
-}
-
-function fmtDate(ts){
-  if(!ts) return '—';
-  return new Date(ts).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
-}
-
-function loadHomeProjects(){
-  getAllMaps(function(maps){
-    var grid=$('proj-grid');grid.innerHTML='';
-    $('hs-proj-count').textContent=maps.length;
-    if(!maps.length){
-      grid.innerHTML='<div class="empty-state">'+
-        '<div class="empty-icon"></div>'+
-        '<h3>No saved maps yet</h3>'+
-        '<p>Create your first terrain using the + button above.</p>'+
-        '</div>';
-      return;
-    }
-    maps.sort(function(a,b){return(b.updatedAt||0)-(a.updatedAt||0);});
-    maps.forEach(function(m){grid.appendChild(mkMapCard(m));});
-  });
-}
-
-function mkMapCard(proj){
-  var card=document.createElement('div');card.className='proj-card';
-  var eq=(proj.state&&proj.state.eq)||'—';
-  var eqShort=eq.length>44?eq.slice(0,42)+'…':eq;
-  var thumb=proj.thumbnail||'';
-  card.innerHTML=
-    '<div class="proj-thumb">'+
-      (thumb?'<img src="'+thumb+'" alt="Map preview" loading="lazy">':'<div class="proj-thumb-placeholder"></div>')+
-      '<div class="proj-thumb-overlay"></div>'+
-    '</div>'+
-    '<div class="proj-info">'+
-      '<div class="proj-name">'+escH(proj.name)+'</div>'+
-      '<div class="proj-meta"><span class="proj-meta-lbl">Seed</span><span class="proj-meta-val">'+((proj.state&&proj.state.seed)||'—')+'</span></div>'+
-      '<div class="proj-meta"><span class="proj-meta-lbl">Updated</span><span class="proj-meta-val">'+fmtDate(proj.updatedAt)+'</span></div>'+
-      '<div class="proj-eq"><code>h = '+escH(eqShort)+'</code></div>'+
-    '</div>'+
-    '<div class="proj-actions">'+
-      '<button class="proj-open"> Open Map</button>'+
-      '<button class="proj-del" title="Delete"></button>'+
-    '</div>';
-  card.querySelector('.proj-open').addEventListener('click',function(e){
-    e.stopPropagation();openMap(proj);
-  });
-  card.querySelector('.proj-del').addEventListener('click',function(e){
-    e.stopPropagation();
-    var btn=e.currentTarget;
-    if(btn.dataset.confirming==='1'){
-      btn.dataset.confirming='0';
-      deleteMapDB(proj.id,function(){loadHomeProjects();});
-    }else{
-      btn.dataset.confirming='1';btn.textContent='';
-      btn.style.cssText='background:rgba(240,68,102,.32)!important;border-color:#f04466!important;color:#fff!important;';
-      setTimeout(function(){
-        if(btn.dataset.confirming==='1'){
-          btn.dataset.confirming='0';btn.textContent='';btn.style.cssText='';
-        }
-      },2500);
-    }
-  });
-  card.addEventListener('click',function(){openMap(proj);});
-  return card;
-}
-
-function openMap(proj){
-  currentProjId=proj.id;
-  showVisualizer(proj.name);
-  restoreState(proj.state);
-}
-
-function showSaveModal(){
-  var inp=$('proj-name-inp');
-  inp.value=$('proj-cur-name').textContent==='Unsaved Map'?'':$('proj-cur-name').textContent;
-  $('save-modal').classList.add('open');
-  setTimeout(function(){inp.focus();inp.select();},60);
-}
-function hideSaveModal(){$('save-modal').classList.remove('open');}
-function doSave(){
-  var name=$('proj-name-inp').value.trim()||'Untitled Map';
-  var now=Date.now();
-  var state=captureState();
-  var thumb=captureThumb();
-  hideSaveModal();
-  function performSave(createdAt){
-    var proj={name:name,createdAt:createdAt,updatedAt:now,state:state,thumbnail:thumb};
-    if(currentProjId) proj.id=currentProjId;
-    saveMapDB(proj,function(id){
-      currentProjId=id;
-      $('proj-cur-name').textContent=name;
-      toast(' Saved','"'+escH(name)+'" saved to library.');
-    });
-  }
-  if(currentProjId){
-    getMapById(currentProjId,function(ex){performSave(ex?ex.createdAt:now);});
-  }else{
-    performSave(now);
-  }
-}
-
-//  WIRE UP ALL EVENTS 
-function bindEvents(){
-  // Sliders
-  var sliders=[
-    ['sl-scale','scale',2],['sl-amp','amp',1],['sl-oct','oct',0],
-    ['sl-rough','rough',2],['sl-res','res',0],['sl-ero','erosion',2],
-    ['sl-cblend','cBlend',2],['sl-beach','beachW',3]
-  ];
-  sliders.forEach(function(s){
-    var el=$(s[0]);if(!el)return;
-    el.addEventListener('input',function(){
-      STATE[s[1]]=parseFloat(el.value);
-      var vEl=$('v-'+s[0].replace('sl-',''));
-      if(vEl) vEl.textContent=parseFloat(el.value).toFixed(s[2]);
-    });
-  });
-
-  // Equation
-  $('terrain-eq').addEventListener('input',function(){
-    STATE.eq=$('terrain-eq').value;
-    $('terrain-eq').classList.remove('ie');
-  });
-  $('terrain-eq').addEventListener('keydown',function(e){
-    if(e.key==='Enter'){generate();}
-  });
-
-  // Preset
-  $('preset-sel').addEventListener('change',function(){
-    if(!$('preset-sel').value) return;
-    STATE.eq=$('preset-sel').value;
-    $('terrain-eq').value=STATE.eq;
-    $('preset-sel').value='';
-    generate();
-  });
-
-  // Generate button
-  $('btn-regen').addEventListener('click',function(){generate();});
-
-  // Toggles
-  tog('tog-wire','tw-tog','wireframe',function(v){
-    if(terrainMesh) terrainMesh.material.wireframe=v;
-  });
-  tog('tog-flat','tf-tog','flatShade',function(v){
-    if(terrainMesh){terrainMesh.material.flatShading=v;terrainMesh.material.needsUpdate=true;}
-  });
-  tog('tog-cam','tc-tog','autoRotate',function(v){orb.autoRotate=v;});
-
-  // Color inputs
-  ['deep','shallow','sand','grass','forest','rock','snow'].forEach(function(k){
-    var el=$('c-'+k);if(!el)return;
-    el.addEventListener('input',function(){STATE.colors[k]=el.value;});
-  });
-  $('btn-apply-color').addEventListener('click',function(){
-    if(heightCache) buildTerrainMesh(heightCache);
-    toast('Colors Applied','Splat map updated.');
-  });
-
-  // Layers
-  $('b-lay').addEventListener('click',function(){addLayer();});
-  $('b-lay-clr').addEventListener('click',function(){
-    $('lay-con').innerHTML='';STATE.layers=[];
-  });
-
-  // Tabs
-  document.querySelectorAll('.tab-btn').forEach(function(btn){
-    btn.addEventListener('click',function(){
-      document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('active');});
-      document.querySelectorAll('.tab-pane').forEach(function(p){p.classList.remove('active');});
-      btn.classList.add('active');
-      var pane=$('tab-'+btn.dataset.tab);
-      if(pane) pane.classList.add('active');
-    });
-  });
-
-  // UI toggle
-  $('utog').addEventListener('click',function(){
-    var col=!$('terrain-ui').classList.contains('collapsed');
-    $('terrain-ui').classList.toggle('collapsed',col);
-    $('utog').textContent=col?'':'';
-  });
-
-  // Top bar
-  $('btn-back-home').addEventListener('click',showHome);
-  $('btn-save-proj').addEventListener('click',showSaveModal);
-  $('btn-export').addEventListener('click',trigExport);
-  $('btn-new-proj').addEventListener('click',function(){
-    currentProjId=null;
-    STATE.seed=Math.floor(Math.random()*99999);
-    STATE.eq='fbm(x,y,6)*3 + ridge(x,y)*1.5';
-    syncAllUI();
-    showVisualizer();
-    generate();
-  });
-
-  // Save modal
-  $('save-confirm').addEventListener('click',doSave);
-  $('save-cancel').addEventListener('click',hideSaveModal);
-  $('proj-name-inp').addEventListener('keydown',function(e){
-    if(e.key==='Enter') doSave();
-    if(e.key==='Escape') hideSaveModal();
-  });
-  $('save-modal').addEventListener('click',function(e){if(e.target===$('save-modal'))hideSaveModal();});
-
-  // Keyboard
-  window.addEventListener('keydown',function(e){
-    var act=document.activeElement;
-    if(act===$('terrain-eq')||act===$('proj-name-inp')){
-      if(e.key==='Escape')act.blur(); return;
-    }
-    if(e.key===' '){e.preventDefault();orb.autoRotate=!orb.autoRotate;$('tc-tog').classList.toggle('on',orb.autoRotate);}
-    if(e.key.toLowerCase()==='g') generate();
-    if(e.key.toLowerCase()==='h') $('utog').click();
-    if(e.key.toLowerCase()==='e') trigExport();
-    if(e.key.toLowerCase()==='w') $('tog-wire').click();
-  });
-}
-
-//  ANIMATION LOOP 
-var lastT=performance.now();
-function animate(){
-  requestAnimationFrame(animate);
-  var now=performance.now(), dt=Math.min((now-lastT)/1000,.05);lastT=now;
-  gTime+=dt;
-  if(orb.autoRotate&&!orb.dragging){orb.theta+=dt*.1;applyCam();}
-  renderer.render(scene,camera);
-  if(pendExp){doExport();}
-}
-
-//  INIT 
-window.addEventListener('DOMContentLoaded',function(){
-  try{
-    initThree();
-    bindEvents();
-    syncAllUI();
-    $('loading').style.display='none';
-    showHome();
-    animate();
-  }catch(e){
-    console.error(e);
-    $('loading').innerHTML='<h2 style="color:#f04466">Initialisation Error</h2><p style="color:#a0b0c0;font-size:12px">'+e.message+'</p>';
-  }
-});
-</script>
+<!-- APPLICATION ENTRY POINT (ES module — imports every other module) -->
+<script type="module" src="script/main.js"></script>
 </body>
 </html>

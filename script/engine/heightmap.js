@@ -1,6 +1,6 @@
-import { STATE, SURF, runtime } from './script/core/state.js';
-import { getEquationFn } from './script/engine/equations.js';
-import { sn } from './script/engine/noise.js';
+import { STATE, SURF, runtime } from '../core/state.js';
+import { getEquationFn } from './equations.js';
+import { sn } from './noise.js';
 
 export function buildHeightmap() {
   const res = STATE.res;

@@ -1,11 +1,11 @@
-import { runtime } from './script/core/state.js';
-import { $ } from './script/utils/utils.js';
-import { buildHeightmap } from './script/engine/heightmap.js';
-import { buildTerrainMesh } from './script/engine/terrain-mesh.js';
-import { buildWater } from './script/environment/water.js';
-import { spawnFoliage } from './script/environment/foliage.js';
-import { updateStats } from './script/utils/stats.js';
-import { toast } from './script/utils/toast.js';
+import { runtime } from '../core/state.js';
+import { $ } from '../utils/utils.js';
+import { buildHeightmap } from './heightmap.js';
+import { buildTerrainMesh } from './terrain-mesh.js';
+import { buildWater } from '../environment/water.js';
+import { spawnFoliage } from '../environment/foliage.js';
+import { updateStats } from '../utils/stats.js';
+import { toast } from '../utils/toast.js';
 
 export function generate(showProgress) {
   if (runtime.generating) return;

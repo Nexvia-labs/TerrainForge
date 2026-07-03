@@ -3,8 +3,8 @@
 // BufferGeometry mesh (vertex-colored splat map, computed normals).
 // ─────────────────────────────────────────────────────────────────
 
-import { STATE, runtime } from './script/core/state.js';
-import { splatColor } from './script/environment/colors.js';
+import { STATE, runtime } from '../core/state.js';
+import { splatColor } from '../environment/colors.js';
 
 /**
  * Build (or rebuild) the terrain mesh from heightmap data.

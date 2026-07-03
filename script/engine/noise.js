@@ -1,5 +1,5 @@
 
-import { STATE } from './script/core/state.js';
+import { STATE } from '../core/state.js';
 
 const G2 = 0.2113248654051871;
 const grad3 = new Int8Array([

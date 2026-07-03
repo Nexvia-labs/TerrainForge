@@ -3,7 +3,7 @@
 // in the browser (name, captured STATE, and a thumbnail).
 // ─────────────────────────────────────────────────────────────────
 
-import { runtime, DB_NAME, DB_VER, DB_STORE } from './state.js';
+import { runtime, DB_NAME, DB_VER, DB_STORE } from './script/core/state.js';
 
 export function openDB(cb) {
   if (runtime.idb) { cb(runtime.idb); return; }

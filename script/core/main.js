@@ -1,16 +1,10 @@
-// ─────────────────────────────────────────────────────────────────
-// MAIN — application entry point. Boots the three.js scene, wires
-// every UI control, and drives the per-frame animation loop
-// (water ripple, auto-rotate camera, deferred PNG export capture).
-// ─────────────────────────────────────────────────────────────────
-
-import { runtime } from './state.js';
-import { initThree, applyCam } from './scene.js';
-import { animateWater } from './water.js';
-import { doExport } from './export.js';
-import { bindEvents, syncAllUI } from './ui.js';
-import { showHome } from './projects.js';
-import { $ } from './utils.js';
+import { runtime } from './script/core/state.js';
+import { initThree, applyCam } from './script/core/scene.js';
+import { animateWater } from './script/environment/water.js';
+import { doExport } from './script/utils/export.js';
+import { bindEvents, syncAllUI } from './script/utils/ui.js';
+import { showHome } from './script/utils/projects.js';
+import { $ } from './script/utils/utils.js';
 
 let lastT = performance.now();
 

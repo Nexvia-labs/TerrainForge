@@ -1,6 +1,5 @@
-
-import { runtime } from './state.js';
-import { $ } from './utils.js';
+import { runtime } from './script/core/state.js';
+import { $ } from './script/utils/utils.js';
 
 export function initThree() {
   const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true, alpha: false });

@@ -23,9 +23,6 @@ export function captureState() {
 export function restoreState(st) {
   if (!st) return;
   Object.assign(STATE, st);
-  
-  delete STATE.seed;
-
   syncAllUI();
   // Restore layers
   $('lay-con').innerHTML = ''; STATE.layers = [];
@@ -84,6 +81,7 @@ function mkMapCard(proj) {
     '</div>' +
     '<div class="proj-info">' +
     '<div class="proj-name">' + escH(proj.name) + '</div>' +
+    '<div class="proj-meta"><span class="proj-meta-lbl">Seed</span><span class="proj-meta-val">' + ((proj.state && proj.state.seed) || '—') + '</span></div>' +
     '<div class="proj-meta"><span class="proj-meta-lbl">Updated</span><span class="proj-meta-val">' + fmtDate(proj.updatedAt) + '</span></div>' +
     '<div class="proj-eq"><code>h = ' + escH(eqShort) + '</code></div>' +
     '</div>' +

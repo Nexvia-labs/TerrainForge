@@ -13,6 +13,7 @@ import { buildTerrainMesh } from '../engine/terrain-mesh.js';
 import { buildWater } from '../environment/water.js';
 import { trigExport } from './export.js';
 import { toast } from './toast.js';
+import { updateDNA, buildMapCode, loadMapCode } from './seed.js';
 import { showHome, showVisualizer, showSaveModal, hideSaveModal, doSave } from './projects.js';
 
 // ── STATE → UI ───────────────────────────────────────────────────
@@ -42,6 +43,7 @@ export function syncAllUI() {
   sv('sl-mslope', STATE.maxSlope); svt('v-mslope', STATE.maxSlope.toFixed(2));
   sv('sl-cblend', STATE.cBlend); svt('v-cblend', STATE.cBlend.toFixed(2));
   sv('sl-beach', STATE.beachW); svt('v-beach', STATE.beachW.toFixed(3));
+  sv('seed-in', STATE.seed);
 
   // Colors
   Object.keys(STATE.colors).forEach(function (k) {
@@ -94,6 +96,7 @@ export function bindEvents() {
   $('terrain-eq').addEventListener('input', function () {
     STATE.eq = $('terrain-eq').value;
     $('terrain-eq').classList.remove('ie');
+    updateDNA();
   });
   $('terrain-eq').addEventListener('keydown', function (e) {
     if (e.key === 'Enter') { generate(); }
@@ -105,6 +108,7 @@ export function bindEvents() {
     STATE.eq = $('preset-sel').value;
     $('terrain-eq').value = STATE.eq;
     $('preset-sel').value = '';
+    updateDNA();
     generate();
   });
 
@@ -136,6 +140,36 @@ export function bindEvents() {
   $('b-lay').addEventListener('click', function () { addLayer(); });
   $('b-lay-clr').addEventListener('click', function () {
     $('lay-con').innerHTML = ''; STATE.layers = [];
+    updateDNA();
+  });
+
+  // Seed
+  $('btn-seed-gen').addEventListener('click', function () {
+    STATE.seed = Math.floor(Math.random() * 999999);
+    $('seed-in').value = STATE.seed;
+    updateDNA();
+    generate();
+  });
+  $('btn-seed-load').addEventListener('click', function () {
+    const v = $('seed-in').value.trim();
+    if (v.length > 10) {
+      // Long strings are treated as a full map code, not a raw seed
+      if (!loadMapCode(v)) toast('Invalid Code', 'Could not parse map code.');
+    } else {
+      STATE.seed = parseInt(v) || 0;
+      $('seed-in').value = STATE.seed;
+      generate();
+    }
+  });
+  $('btn-seed-copy').addEventListener('click', function () {
+    const code = buildMapCode();
+    navigator.clipboard.writeText(code).then(function () {
+      toast('Copied!', 'Map code copied to clipboard. Share it to reproduce this exact terrain.');
+    }).catch(function () {
+      $('seed-in').value = code;
+      $('seed-in').select();
+      toast('Select & Copy', 'Clipboard unavailable — code is selected in the input.');
+    });
   });
 
   // Tabs
@@ -162,6 +196,7 @@ export function bindEvents() {
   $('btn-export').addEventListener('click', trigExport);
   $('btn-new-proj').addEventListener('click', function () {
     runtime.currentProjectId = null;
+    STATE.seed = Math.floor(Math.random() * 99999);
     STATE.eq = DEFAULT_EQUATION;
     syncAllUI();
     showVisualizer();
@@ -180,7 +215,7 @@ export function bindEvents() {
   // Keyboard
   window.addEventListener('keydown', function (e) {
     const act = document.activeElement;
-    if (act === $('terrain-eq') || act === $('proj-name-inp')) {
+    if (act === $('terrain-eq') || act === $('seed-in') || act === $('proj-name-inp')) {
       if (e.key === 'Escape') act.blur();
       return;
     }

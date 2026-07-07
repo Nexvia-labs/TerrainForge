@@ -33,12 +33,12 @@ export function doExport() {
     ctx.fillText('h(x,y) = ' + STATE.eq.slice(0, 60), cv.width * .025, cv.height - .03 * cv.height);
 
     ctx.textAlign = 'right'; ctx.fillStyle = 'rgba(88,118,165,.6)'; ctx.font = Math.round(9 * sc) + 'px monospace';
-    ctx.fillText('Trees: ' + runtime.treeCount + ' | Rocks: ' + runtime.rockCount, cv.width * .975, cv.height * .055);
+    ctx.fillText('Seed: ' + STATE.seed + ' | Trees: ' + runtime.treeCount + ' | Rocks: ' + runtime.rockCount, cv.width * .975, cv.height * .055);
 
     const lnk = document.createElement('a');
-    lnk.download = 'terrainforge_' + Date.now() + '.png';
+    lnk.download = 'terrainforge_' + STATE.seed + '_' + Date.now() + '.png';
     lnk.href = cv.toDataURL('image/png', 1); lnk.click();
-    toast('Exported', 'PNG saved to your downloads.');
+    toast('Exported', 'PNG saved — Seed ' + STATE.seed + '.');
   } catch (e) {
     toast('Export Failed', e.message);
   }

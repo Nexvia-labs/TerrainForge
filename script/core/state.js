@@ -15,7 +15,7 @@ export const STATE = {
   },
   cBlend: 0.08, beachW: 0.04,
   wireframe: false, flatShade: false,
-  layers: [],
+  seed: 42, layers: [],
   autoRotate: true
 };
 

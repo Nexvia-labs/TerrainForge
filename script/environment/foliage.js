@@ -1,11 +1,12 @@
 // ─────────────────────────────────────────────────────────────────
 // FOLIAGE — scatters trees and rocks across the terrain based on
-// height/slope rules. Placement is randomized fresh every time you
-// hit Generate (there is no seed to reproduce a specific layout).
+// height/slope rules. Placement is seeded from STATE.seed (via the
+// lcg() helper), so the same seed always reproduces the same
+// tree/rock layout — not just the same underlying terrain shape.
 // ─────────────────────────────────────────────────────────────────
 
 import { STATE, SURF, runtime } from '../core/state.js';
-import { $ } from '../utils/utils.js';
+import { $, lcg } from '../utils/utils.js';
 
 export function buildTreeGeo() {
   return new THREE.ConeGeometry(0.7, 2, 7);
@@ -34,7 +35,6 @@ export function spawnFoliage(data, slopes) {
   const ms = STATE.maxSlope;
   const td = STATE.treeDensity, rd = STATE.rockDensity;
 
-  
   const spacing = SURF / Math.max(1, Math.round(22 * td));
   const rspacing = SURF / Math.max(1, Math.round(14 * rd));
 
@@ -59,25 +59,29 @@ export function spawnFoliage(data, slopes) {
     return Math.sqrt(dx * dx + dz * dz) / (s * 2);
   }
 
+  // Seeded RNG (offset from the terrain seed) so foliage placement is
+  // reproducible but doesn't line up 1:1 with the noise field's own samples.
+  const rng = lcg(STATE.seed + 777);
+
   const half = SURF * 0.48;
 
   // Trees
   outerTrees:
   for (let wx = -half; wx < half; wx += spacing) {
     for (let wy = -half; wy < half; wy += spacing) {
-      const jx = (Math.random() - 0.5) * spacing * 0.8;
-      const jy = (Math.random() - 0.5) * spacing * 0.8;
+      const jx = (rng() - 0.5) * spacing * 0.8;
+      const jy = (rng() - 0.5) * spacing * 0.8;
       const sx = wx + jx, sy = wy + jy;
       const h = sampleH(sx, sy);
       const hn = (h - runtime.zMin) / zRng;
       const sl = sampleSlope(sx, sy);
       if (hn < flo || hn > fhi || sl > ms || hn < seaN + 0.02) continue;
-      if (Math.random() > td) continue;
-      const sc = 0.18 + Math.random() * 0.22;
+      if (rng() > td) continue;
+      const sc = 0.18 + rng() * 0.22;
       const tree = new THREE.Mesh(treeGeo, treeMat);
       tree.scale.setScalar(sc);
       tree.position.set(sx, h, sy);
-      tree.rotation.y = Math.random() * Math.PI * 2;
+      tree.rotation.y = rng() * Math.PI * 2;
       tree.castShadow = true;
       mkGrp.add(tree);
       runtime.treeCount++;
@@ -89,21 +93,21 @@ export function spawnFoliage(data, slopes) {
   outerRocks:
   for (let wx = -half; wx < half; wx += rspacing) {
     for (let wy = -half; wy < half; wy += rspacing) {
-      const jx = (Math.random() - 0.5) * rspacing * 0.9;
-      const jy = (Math.random() - 0.5) * rspacing * 0.9;
+      const jx = (rng() - 0.5) * rspacing * 0.9;
+      const jy = (rng() - 0.5) * rspacing * 0.9;
       const sx = wx + jx, sy = wy + jy;
       const h = sampleH(sx, sy);
       const hn = (h - runtime.zMin) / zRng;
       const sl = sampleSlope(sx, sy);
       if (hn < seaN + 0.02 || hn > sn2 * 1.05) continue;
-      if (sl < 0.3 && Math.random() > rd * 0.5) continue;
-      if (Math.random() > rd * 0.7) continue;
-      const scx = 0.1 + Math.random() * 0.18;
-      const scy = 0.07 + Math.random() * 0.14;
+      if (sl < 0.3 && rng() > rd * 0.5) continue;
+      if (rng() > rd * 0.7) continue;
+      const scx = 0.1 + rng() * 0.18;
+      const scy = 0.07 + rng() * 0.14;
       const rock = new THREE.Mesh(rockGeo, rockMat);
-      rock.scale.set(scx, scy, scx * (0.8 + Math.random() * 0.4));
+      rock.scale.set(scx, scy, scx * (0.8 + rng() * 0.4));
       rock.position.set(sx, h - scx * 0.2, sy);
-      rock.rotation.y = Math.random() * Math.PI * 2;
+      rock.rotation.y = rng() * Math.PI * 2;
       rock.castShadow = true;
       mkGrp.add(rock);
       runtime.rockCount++;

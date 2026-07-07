@@ -6,6 +6,7 @@
 import { STATE } from '../core/state.js';
 import { $, escH } from '../utils/utils.js';
 import { getEquationFn } from '../engine/equations.js';
+import { updateDNA } from '../utils/seed.js';
 
 let layerIdCounter = 0;
 
@@ -44,6 +45,7 @@ export function addLayer(eq, blend, op, on) {
     lay.eq = eqIn.value;
     try { lay.fn = getEquationFn(eqIn.value); eqIn.style.borderColor = ''; }
     catch (e) { lay.fn = null; eqIn.style.borderColor = 'var(--er)'; }
+    updateDNA();
   });
   chk.addEventListener('change', function () { lay.on = chk.checked; });
   blSel.addEventListener('change', function () { lay.blend = blSel.value; });
@@ -51,10 +53,12 @@ export function addLayer(eq, blend, op, on) {
   row.querySelector('.lrm').addEventListener('click', function () {
     STATE.layers = STATE.layers.filter(function (l) { return l.id !== id; });
     row.remove();
+    updateDNA();
     renumLayers();
   });
 
   $('lay-con').appendChild(row);
+  updateDNA();
   renumLayers();
 }
 

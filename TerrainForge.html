@@ -62,6 +62,7 @@
     <button class="tab-btn" data-tab="biomes">🌿 Biomes</button>
     <button class="tab-btn" data-tab="layers">📐 Layers</button>
     <button class="tab-btn" data-tab="color">🎨 Color</button>
+    <button class="tab-btn" data-tab="seed">🔑 Seed</button>
   </div>
 
   <!-- TERRAIN TAB -->
@@ -232,6 +233,25 @@
       <button class="btn sm" id="btn-apply-color">↺ Apply Colors</button>
     </div>
   </div>
+
+  <!-- SEED TAB -->
+  <div class="tab-pane" id="tab-seed">
+    <div class="ph">Seed & Map Code</div>
+    <div id="seed-bar">
+      <input id="seed-in" type="text" placeholder="Enter seed or map code…">
+      <button class="btn sm go" id="btn-seed-load">Load Seed</button>
+      <button class="btn sm" id="btn-seed-gen">🎲 Random</button>
+      <button class="btn sm" id="btn-seed-copy">📋 Copy Code</button>
+    </div>
+    <div class="div"></div>
+    <div id="dna-card">
+      <div class="dna-kv"><span class="dna-k">Map Seed</span><span class="dna-v" id="d-seed">—</span></div>
+      <div class="dna-kv"><span class="dna-k">Complexity</span><span class="dna-v" id="d-cmx">—</span></div>
+      <div class="dna-kv"><span class="dna-k">Biome Type</span><span class="dna-v" id="d-biome">—</span></div>
+      <div class="dna-kv"><span class="dna-k">Rarity</span><span class="rb rc" id="d-rar">Common</span></div>
+      <div class="dna-kv"><span class="dna-k">Map Name</span><span class="dna-v" id="d-sig">—</span></div>
+    </div>
+  </div>
 </div>
 
 <!-- HOME SCREEN -->
@@ -244,6 +264,7 @@
       <span class="badge">Splat Coloring</span>
       <span class="badge">Tree Spawning</span>
       <span class="badge">Water & Rivers</span>
+      <span class="badge">Seed Sharing</span>
       <span class="badge">Equation Layers</span>
     </div>
   </div>

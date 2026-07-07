@@ -3,6 +3,7 @@ import { initThree, applyCam } from './core/scene.js';
 import { animateWater } from './environment/water.js';
 import { doExport } from './utils/export.js';
 import { bindEvents, syncAllUI } from './utils/ui.js';
+import { updateDNA } from './utils/seed.js';
 import { showHome } from './utils/projects.js';
 import { $ } from './utils/utils.js';
 
@@ -32,6 +33,7 @@ window.addEventListener('DOMContentLoaded', function () {
     initThree();
     bindEvents();
     syncAllUI();
+    updateDNA();
     $('loading').style.display = 'none';
     showHome();
     animate();

@@ -7,22 +7,18 @@ const grad3 = new Int8Array([
   1, 0, -1, -1, 0, -1, 0, 1, 1, 0, -1, 1, 0, 1, -1, 0, -1, 1
 ]);
 
-// Fixed internal constant used only to shuffle the permutation table.
-// This is an implementation detail of the Simplex algorithm, not a
-// user-facing seed — it never changes and is never exposed.
-const TABLE_KEY = 0x9e3779b1;
-
 export class SimplexNoise {
-  constructor() {
+  constructor(seed) {
+    seed = seed || 0;
     this.p = new Uint8Array(256);
     this.perm = new Uint8Array(512);
     this.permMod12 = new Uint8Array(512);
     for (let i = 0; i < 256; i++) this.p[i] = i;
 
-    let state = TABLE_KEY;
+    
     for (let i = 255; i > 0; i--) {
-      state = (state * 1664525 + 1013904223) & 0xffffffff;
-      const j = ((state >>> 16) & 0x7fff) % (i + 1);
+      seed = (seed * 1664525 + 1013904223) & 0xffffffff;
+      const j = ((seed >>> 16) & 0x7fff) % (i + 1);
       const tmp = this.p[i]; this.p[i] = this.p[j]; this.p[j] = tmp;
     }
     for (let i = 0; i < 512; i++) {
@@ -56,8 +52,15 @@ export class SimplexNoise {
   }
 }
 
-// Single shared noise instance — fixed forever, never reseeded.
-const gNoise = new SimplexNoise();
+// Single shared noise instance, reseeded by reseedNoise() at the start of
+// every generate() call so a given STATE.seed always reproduces the same
+// terrain.
+let gNoise = new SimplexNoise(STATE.seed);
+
+/** Reseed the shared noise instance — call before rebuilding a heightmap. */
+export function reseedNoise(seed) {
+  gNoise = new SimplexNoise(seed);
+}
 
 /** Raw 2D simplex noise sample. */
 export function sn(x, y) {

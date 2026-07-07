@@ -1,10 +1,12 @@
-import { runtime } from '../core/state.js';
+import { STATE, runtime } from '../core/state.js';
 import { $ } from '../utils/utils.js';
 import { buildHeightmap } from './heightmap.js';
 import { buildTerrainMesh } from './terrain-mesh.js';
 import { buildWater } from '../environment/water.js';
 import { spawnFoliage } from '../environment/foliage.js';
+import { reseedNoise } from './noise.js';
 import { updateStats } from '../utils/stats.js';
+import { updateDNA } from '../utils/seed.js';
 import { toast } from '../utils/toast.js';
 
 export function generate(showProgress) {
@@ -14,6 +16,7 @@ export function generate(showProgress) {
 
   setTimeout(function () {
     setProgress(10, 'Building heightmap…');
+    reseedNoise(STATE.seed);
 
     setTimeout(function () {
       let data;
@@ -36,11 +39,12 @@ export function generate(showProgress) {
             spawnFoliage(data, slopes);
             setProgress(100, 'Done!');
             updateStats();
+            updateDNA();
 
             setTimeout(function () {
               hideGenProgress();
               runtime.generating = false;
-              toast('Terrain Built', runtime.treeCount + ' trees, ' + runtime.rockCount + ' rocks placed.');
+              toast('Terrain Built', 'Seed ' + STATE.seed + ' — ' + runtime.treeCount + ' trees, ' + runtime.rockCount + ' rocks.');
             }, 350);
           }, 20);
         }, 10);

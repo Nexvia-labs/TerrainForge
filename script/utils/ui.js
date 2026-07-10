@@ -11,7 +11,7 @@ import { generate } from '../engine/generator.js';
 import { addLayer } from '../environment/layers.js';
 import { buildTerrainMesh } from '../engine/terrain-mesh.js';
 import { buildWater } from '../environment/water.js';
-import { trigExport } from './export.js';
+import { trigExport, exportOBJ } from './export.js';
 import { toast } from './toast.js';
 import { updateDNA, buildMapCode, loadMapCode } from './seed.js';
 import { showHome, showVisualizer, showSaveModal, hideSaveModal, doSave } from './projects.js';
@@ -194,6 +194,7 @@ export function bindEvents() {
   $('btn-back-home').addEventListener('click', showHome);
   $('btn-save-proj').addEventListener('click', showSaveModal);
   $('btn-export').addEventListener('click', trigExport);
+  $('btn-export-obj').addEventListener('click', exportOBJ);
   $('btn-new-proj').addEventListener('click', function () {
     runtime.currentProjectId = null;
     STATE.seed = Math.floor(Math.random() * 99999);

@@ -12,7 +12,6 @@
 [![Three.js](https://img.shields.io/badge/Three.js-r128-000000?style=flat-square&logo=three.js&logoColor=white)](https://threejs.org/)
 [![JavaScript](https://img.shields.io/badge/JavaScript-Vanilla%20ES6-F7DF1E?style=flat-square&logo=javascript&logoColor=black)](#-tech-stack)
 [![Build](https://img.shields.io/badge/Build-Zero%20Config-brightgreen?style=flat-square)](#-getting-started)
-[![Format](https://img.shields.io/badge/Format-Single%20HTML%20File-orange?style=flat-square)](#-project-structure)
 [![WebGL](https://img.shields.io/badge/WebGL-Required-red?style=flat-square)](#-requirements)
 [![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](#-license)
 
@@ -20,7 +19,7 @@
 
 <br>
 
-> 📌 **Note:** This README references image assets under `assets/` (e.g. `assets/banner.png`, `assets/demo.gif`). Drop your own screenshots and recordings into that folder using the file names below and everything will render automatically — no other changes needed.
+> 📌 **Note:** This README references image assets under `assets/` (e.g. `assets/banner.png`, `assets/demo.gif`). 
 
 ---
 

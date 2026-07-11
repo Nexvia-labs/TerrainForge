@@ -1,3 +1,10 @@
+### ⚠️NOTICE - ReadMe Pre-Upload ⚠️
+### In this following readme.md , you can see some of the contents like node compilation,  etc. that are absent in the TerrainForge-v2.0.0-Stable .
+
+### The features that are addressed in this readme and are absent in the TerrainForge has been made , but yet not uploaded .
+
+### Reason - As I am a High School student , so I also have to focus on my exams , thus there may be delay in TerrainForge updates.
+
 <a id="top"></a>
 <div align="center">
 

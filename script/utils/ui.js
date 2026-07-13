@@ -11,9 +11,10 @@ import { generate } from '../engine/generator.js';
 import { addLayer } from '../environment/layers.js';
 import { buildTerrainMesh } from '../engine/terrain-mesh.js';
 import { buildWater } from '../environment/water.js';
-import { trigExport, exportOBJ } from './export.js';
+import { trigExport, exportOBJ, exportGLB, exportSplatmap } from './export.js';
 import { toast } from './toast.js';
 import { updateDNA, buildMapCode, loadMapCode } from './seed.js';
+import { NG } from './nodegraph.js';
 import { showHome, showVisualizer, showSaveModal, hideSaveModal, doSave } from './projects.js';
 
 // ── STATE → UI ───────────────────────────────────────────────────
@@ -195,6 +196,8 @@ export function bindEvents() {
   $('btn-save-proj').addEventListener('click', showSaveModal);
   $('btn-export').addEventListener('click', trigExport);
   $('btn-export-obj').addEventListener('click', exportOBJ);
+  $('btn-export-glb').addEventListener('click', exportGLB);
+  $('btn-export-splat').addEventListener('click', exportSplatmap);
   $('btn-new-proj').addEventListener('click', function () {
     runtime.currentProjectId = null;
     STATE.seed = Math.floor(Math.random() * 99999);
@@ -212,6 +215,9 @@ export function bindEvents() {
     if (e.key === 'Escape') hideSaveModal();
   });
   $('save-modal').addEventListener('click', function (e) { if (e.target === $('save-modal')) hideSaveModal(); });
+
+  // Node graph init
+  NG.init();
 
   // Keyboard
   window.addEventListener('keydown', function (e) {

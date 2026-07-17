@@ -29,6 +29,8 @@
   <button class="btn sm" id="btn-save-proj">💾 Save</button>
   <button class="btn sm" id="btn-export">↓ PNG</button>
   <button class="btn sm pu" id="btn-export-obj">↓ OBJ</button>
+  <button class="btn sm pu" id="btn-export-glb">↓ GLB</button>
+  <button class="btn sm" id="btn-export-splat" title="RGBA Splatmap">↓ Splat</button>
 </div>
 
 <!-- STATS -->
@@ -63,6 +65,7 @@
     <button class="tab-btn" data-tab="biomes">🌿 Biomes</button>
     <button class="tab-btn" data-tab="layers">📐 Layers</button>
     <button class="tab-btn" data-tab="color">🎨 Color</button>
+    <button class="tab-btn" data-tab="nodes">⚡ Nodes</button>
     <button class="tab-btn" data-tab="seed">🔑 Seed</button>
   </div>
 
@@ -235,6 +238,43 @@
     </div>
   </div>
 
+  <!-- NODES TAB -->
+  <div class="tab-pane" id="tab-nodes">
+    <div class="ph">Visual Node Graph — Equation Builder</div>
+    <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-bottom:7px">
+      <select id="ng-add-node" style="font-size:9px">
+        <option value="">+ Add Node…</option>
+        <optgroup label="Noise Sources">
+          <option value="fbm">FBM Noise</option>
+          <option value="ridge">Ridge Noise</option>
+          <option value="warp">Domain Warp</option>
+          <option value="island">Island Mask</option>
+          <option value="canyon">Canyon</option>
+          <option value="volcano">Volcano</option>
+          <option value="mesa">Mesa</option>
+        </optgroup>
+        <optgroup label="Math Operations">
+          <option value="add">Add (A+B)</option>
+          <option value="multiply">Multiply (A×B)</option>
+          <option value="subtract">Subtract (A-B)</option>
+          <option value="scale">Scale (A×k)</option>
+          <option value="offset">Offset (A+k)</option>
+        </optgroup>
+        <optgroup label="Terminal">
+          <option value="output">★ Output</option>
+        </optgroup>
+      </select>
+      <button class="btn sm am" id="ng-compile">⚡ Compile → Equation</button>
+      <button class="btn sm er" id="ng-clear">✕ Reset</button>
+      <span style="font-size:9px;color:var(--t3);font-family:var(--fm)" id="ng-status">Connect nodes → Compile</span>
+    </div>
+    <div id="ng-canvas-wrap" style="position:relative;width:100%;height:240px;background:rgba(0,6,20,.75);border:1px solid rgba(80,145,255,.18);border-radius:9px;overflow:hidden;cursor:default">
+      <svg id="ng-svg" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1;overflow:visible"></svg>
+      <div id="ng-nodes" style="position:absolute;inset:0;z-index:2"></div>
+      <div style="position:absolute;bottom:7px;right:10px;font-size:8px;color:rgba(80,145,255,.4);font-family:var(--fm);pointer-events:none">Drag nodes · Click ports to connect</div>
+    </div>
+  </div>
+
   <!-- SEED TAB -->
   <div class="tab-pane" id="tab-seed">
     <div class="ph">Seed & Map Code</div>
@@ -267,6 +307,8 @@
       <span class="badge">Water & Rivers</span>
       <span class="badge">Seed Sharing</span>
       <span class="badge">Equation Layers</span>
+      <span class="badge">GLB Export</span>
+      <span class="badge">Node Graph</span>
     </div>
   </div>
   <div class="hs-new">

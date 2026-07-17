@@ -4,7 +4,7 @@
 
 When I first started building TerrainForge, my initial idea for world sharing was to use Firebase. It seemed like the obvious solution. Every generated world could be uploaded to a database, and users would simply receive a unique world ID to share with others.
 
-<img src="..assets/journey-of-development/Firebase-trial.jpg" alt="Firebase-Image" width="100%">
+<img src="../assets/journey-of-development/Firebase-trial.jpg" alt="Firebase-Image" width="100%">
 As development continued, I realized that this approach conflicted with one of TerrainForge's core principles.
 
 ----
@@ -31,7 +31,7 @@ _Because the generation algorithm always produces the same output for the same i
 
 -----
 
-<img src="..assets/journey-of-development/Seed-LCG.jpg" alt="Seed-LCG-Image" width="100%">
+<img src="../assets/journey-of-development/Seed-LCG.jpg" alt="Seed-LCG-Image" width="100%">
 
 ----
 

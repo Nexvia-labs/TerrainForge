@@ -1,6 +1,6 @@
 import { STATE, runtime } from '../core/state.js';
 import { $ } from '../utils/utils.js';
-import { buildHeightmap } from './heightmap.js';
+import { buildHeightmap, buildHeightmapChunked } from './heightmap.js';
 import { buildTerrainMesh } from './terrain-mesh.js';
 import { buildWater } from '../environment/water.js';
 import { spawnFoliage } from '../environment/foliage.js';
@@ -18,39 +18,51 @@ export function generate(showProgress) {
     setProgress(10, 'Building heightmap…');
     reseedNoise(STATE.seed);
 
+    
+    if (STATE.res >= 192) {
+      buildHeightmapChunked(function (data) {
+        runtime.heightCache = data;
+        continueGenerate(data);
+      }, setProgress);
+    } else {
+      setTimeout(function () {
+        let data;
+        try { data = buildHeightmap(); }
+        catch (e) { toast('Error', 'Heightmap failed: ' + e.message); hideGenProgress(); runtime.generating = false; return; }
+        runtime.heightCache = data;
+        continueGenerate(data);
+      }, 10);
+    }
+  }, 40);
+}
+
+function continueGenerate(data) {
+  setProgress(40, 'Meshing terrain…');
+
+  setTimeout(function () {
+    let slopes;
+    try { slopes = buildTerrainMesh(data); }
+    catch (e) { toast('Error', 'Mesh failed: ' + e.message); hideGenProgress(); runtime.generating = false; return; }
+    setProgress(65, 'Spawning water…');
+
     setTimeout(function () {
-      let data;
-      try { data = buildHeightmap(); }
-      catch (e) { toast('Error', 'Heightmap failed: ' + e.message); hideGenProgress(); runtime.generating = false; return; }
-      runtime.heightCache = data;
-      setProgress(40, 'Meshing terrain…');
+      buildWater();
+      setProgress(78, 'Placing trees & rocks…');
 
       setTimeout(function () {
-        let slopes;
-        try { slopes = buildTerrainMesh(data); }
-        catch (e) { toast('Error', 'Mesh failed: ' + e.message); hideGenProgress(); runtime.generating = false; return; }
-        setProgress(65, 'Spawning water…');
+        spawnFoliage(data, slopes);
+        setProgress(100, 'Done!');
+        updateStats();
+        updateDNA();
 
         setTimeout(function () {
-          buildWater();
-          setProgress(78, 'Placing trees & rocks…');
-
-          setTimeout(function () {
-            spawnFoliage(data, slopes);
-            setProgress(100, 'Done!');
-            updateStats();
-            updateDNA();
-
-            setTimeout(function () {
-              hideGenProgress();
-              runtime.generating = false;
-              toast('Terrain Built', 'Seed ' + STATE.seed + ' — ' + runtime.treeCount + ' trees, ' + runtime.rockCount + ' rocks.');
-            }, 350);
-          }, 20);
-        }, 10);
-      }, 10);
+          hideGenProgress();
+          runtime.generating = false;
+          toast('Terrain Built', 'Seed ' + STATE.seed + ' — ' + runtime.treeCount + ' trees, ' + runtime.rockCount + ' rocks.');
+        }, 350);
+      }, 20);
     }, 10);
-  }, 40);
+  }, 10);
 }
 
 export function showGenProgress() {

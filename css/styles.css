@@ -263,3 +263,9 @@ select option{background:#05101e}
 /* TOGGLE BUTTON */
 #utog{position:fixed;bottom:13px;right:14px;z-index:101;padding:9px 12px;
   font-size:13px;display:none}
+
+/* NODE GRAPH */
+#ng-canvas-wrap{position:relative;overflow:hidden}
+.ng-port{transition:background .15s,transform .15s}
+.ng-port:hover{transform:scale(1.4)!important}
+#ng-svg path{transition:stroke .15s}

@@ -1,14 +1,7 @@
-### ⚠️NOTICE - ReadMe Pre-Upload ⚠️
-### In this following readme.md , you can see some of the contents like node compilation,  etc. that are absent in the TerrainForge-v2.0.0-Stable .
-
-### The features that are addressed in this readme and are absent in the TerrainForge has been made , but yet not uploaded .
-
-### Reason - As I am a High School student , so I also have to focus on my exams , thus there may be delay in TerrainForge updates.
-
 <a id="top"></a>
 <div align="center">
 
-<img src="assets/banner.png" alt="TerrainForge-Lite banner" width="100%">
+<img src="assets/Readme/banner.png" alt="TerrainForge-Lite banner" width="100%">
 
 # ⛰️ TerrainForge‑Lite
 
@@ -102,7 +95,7 @@ There's no install, no bundler, and no backend. Open the HTML file and you're ge
 ## 🎬 Demo
 
 <div align="center">
-<img src="assets/demo.gif" alt="TerrainForge-Lite workflow demo" width="85%">
+<img src="assets/Readme/demo.gif" alt="TerrainForge-Lite workflow demo" width="85%">
 
 <sub>Generating a map end‑to‑end: preset → sliders → node graph → export.</sub>
 </div>
@@ -113,12 +106,12 @@ There's no install, no bundler, and no backend. Open the HTML file and you're ge
 
 <table align="center">
 <tr>
-<td align="center"><img src="assets/results/mountain-range.png" width="360" alt="Mountain Range preset"><br><sub>🏔 Mountain Range</sub></td>
-<td align="center"><img src="assets/results/tropical-island.png" width="360" alt="Tropical Island preset"><br><sub>🏝 Tropical Island</sub></td>
+<td align="center"><img src="assets/Readme/Mountain-Range.png" width="360" alt="Mountain Range preset"><br><sub>🏔 Mountain Range</sub></td>
+<td align="center"><img src="assets/Readme/Island.png"  width="360" alt="Tropical Island preset"><br><sub>🏝 Tropical Island</sub></td>
 </tr>
 <tr>
-<td align="center"><img src="assets/results/volcano.png" width="360" alt="Volcano preset"><br><sub>🌋 Volcano</sub></td>
-<td align="center"><img src="assets/results/archipelago.png" width="360" alt="Archipelago preset"><br><sub>🏖 Archipelago</sub></td>
+<td align="center"><img src="assets/Readme/Volcano.jpg" width="360" alt="Volcano preset"><br><sub>🌋 Volcano</sub></td>
+<td align="center"><img src="assets/Readme/Archipelago.png" width="360" alt="Archipelago preset"><br><sub>🏖 Archipelago</sub></td>
 </tr>
 </table>
 
@@ -127,7 +120,7 @@ There's no install, no bundler, and no backend. Open the HTML file and you're ge
 ## ⚡ Node Compilation
 
 <div align="center">
-<img src="assets/node-graph.png" alt="Visual node graph editor" width="80%">
+<img src="assets/Readme/node-graph.jpg" alt="Visual node graph editor" width="80%">
 </div>
 
 The **Nodes** tab exposes a visual, graph‑based alternative to hand‑writing equations. Add nodes from the palette, drag them around the canvas, and connect ports to describe how noise sources combine — then hit **⚡ Compile → Equation** to convert the graph into the same equation string the Terrain tab uses.
@@ -145,7 +138,7 @@ Because compilation just produces a normal equation string, graphs and hand‑wr
 ## 🎛 Control Panel
 
 <div align="center">
-<img src="assets/controller.png" alt="TerrainForge-Lite control panel" width="80%">
+<img src="assets/Readme/Control-panel.jpg" alt="TerrainForge-Lite control panel" width="80%">
 </div>
 
 All authoring happens in the tabbed side panel:
@@ -164,28 +157,6 @@ A live **stats readout** (Peak Height, Water Level, Tree/Rock Instances, Biome, 
 
 ---
 
-## 🚀 Getting Started
-
-TerrainForge‑Lite has **zero dependencies to install** — it's one HTML file that pulls Three.js from a CDN at load time.
-
-```bash
-# 1. Clone or download the repo
-git clone https://github.com/<your-username>/terrainforge-lite.git
-cd terrainforge-lite
-
-# 2. Open it directly...
-open TerrainForge-lite.html          # macOS
-start TerrainForge-lite.html         # Windows
-xdg-open TerrainForge-lite.html      # Linux
-
-# ...or serve it locally (recommended, for reliable IndexedDB save/load)
-python3 -m http.server 8000
-# then visit http://localhost:8000/TerrainForge-lite.html
-```
-
-That's it — no `npm install`, no build step, no config.
-
----
 
 ## 🧭 Usage Guide
 
@@ -252,7 +223,7 @@ island(x, y, 4) + ridge(x, y) * 0.6 + fbm(x, y, 5, 0.45) * 0.8
 | **Splatmap** | RGBA weight texture — R = Sand, G = Grass/Forest, B = Rock, A = Snow — for use as a layer mask in URP/HDRP |
 
 <div align="center">
-<img src="assets/splatmap-export.png" alt="Exported RGBA splatmap example" width="45%">
+<img src="assets/Readme/Splat-Map.jpg" alt="Exported RGBA splatmap example" width="45%">
 </div>
 
 ---
@@ -267,25 +238,6 @@ island(x, y, 4) + ridge(x, y) * 0.6 + fbm(x, y, 5, 0.45) * 0.8
 
 ---
 
-## 📁 Project Structure
-
-```
-terrainforge-lite/
-├── TerrainForge-lite.html   # The entire application — markup, styles, and logic
-├── assets/                  # README media (add your own screenshots/recordings here)
-│   ├── banner.png
-│   ├── demo.gif
-│   ├── node-graph.png
-│   ├── controller.png
-│   ├── splatmap-export.png
-│   └── results/
-│       ├── mountain-range.png
-│       ├── tropical-island.png
-│       ├── volcano.png
-│       └── archipelago.png
-├── README.md
-└── LICENSE
-```
 
 ---
 

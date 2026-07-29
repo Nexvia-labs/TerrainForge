@@ -472,7 +472,7 @@ Compared with the previous TerrainForge benchmark revision, the optimisation wor
 
 # 4.4 Visual Comparison — Frame Rate
 
-<img src="../assets/Fps-Bm2.jpg" alt="TerrainForge FPS comparison" width="100%">
+<img src="../assets/Benchmarks-v2.0.0-Stable/Fps-Bm2.jpg" alt="TerrainForge FPS comparison" width="100%">
 
 **Figure 1. Average FPS across all benchmark devices**
 
@@ -480,7 +480,7 @@ The optimisation improvements increase sustained frame rate on every tested devi
 
 ---
 
-<img src="../assets/Fps-stability-Bm2.jpg" alt="TerrainForge FPS Trend" width="100%">
+<img src="../assets/Benchmarks-v2.0.0-Stable/Fps-stability-Bm2.jpg" alt="TerrainForge FPS Trend" width="100%">
 
 **Figure 2. FPS stability during continuous editing**
 
@@ -488,7 +488,7 @@ Compared with earlier revisions, TerrainForge v2.0.0 demonstrates noticeably smo
 
 ---
 
-<img src="../assets/Fps-comparison-Bm2.jpg" alt="TerrainForge FPS Breakdown" width="100%">
+<img src="../assets/Benchmarks-v2.0.0-Stable/Fps-comparison-Bm2.jpg" alt="TerrainForge FPS Breakdown" width="100%">
 
 **Figure 3. Peak, Average and Lowest FPS**
 
@@ -498,7 +498,7 @@ The Samsung F06 5G maintains the highest sustained frame rate, while the Vivo 18
 
 # 4.5 Visual Comparison — Memory Usage
 
-<img src="../assets/Ram-Bm2.jpg" alt="TerrainForge RAM Usage" width="100%">
+<img src="../assets/Benchmarks-v2.0.0-Stable/Ram-Bm2.jpg" alt="TerrainForge RAM Usage" width="100%">
 
 **Figure 4. Average RAM Usage**
 
@@ -562,7 +562,7 @@ TerrainForge v2.0.0 fully utilises the additional CPU and memory resources while
 
 The benchmark indicates substantial remaining performance headroom for future TerrainForge features.
 
-<img src="../assets/Comparison-Bm2.jpg" alt="TerrainForge Battery Usage" width="100%">
+<img src="../assets/Benchmarks-v2.0.0-Stable/Comparison-Bm2.jpg" alt="TerrainForge Battery Usage" width="100%">
 
 ----
 

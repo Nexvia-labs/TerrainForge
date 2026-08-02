@@ -5,6 +5,10 @@ export const STATE = {
   eq: 'fbm(x,y,6)*3 + ridge(x,y)*1.5',
   scale: 1.0, amp: 2.0, oct: 6, rough: 0.5,
   res: 128, erosion: 0.0,
+  erosionType: 'none',
+  droplets: 3000, inertia: 0.05, eroRate: 0.3, depRate: 0.3, evap: 0.02,
+  talusAngle: 30, thermIters: 20,
+  showFlowMap: false,
   seaLevel: 0.0, wAlpha: 0.6, wSpeed: 0.4, wHeight: 0.08,
   riverOn: false, riverDepth: 0.6, riverWarp: 0.8,
   treeDensity: 0.5, rockDensity: 0.3,
@@ -20,7 +24,7 @@ export const STATE = {
 };
 
 /** The default equation used whenever a brand-new map is created. */
-export const DEFAULT_EQUATION = 'fbm(x,y,6)*3 + ridge(x,y)*1.5';
+export const DEFAULT_EQUATION = 'archipelago(x/2,y/2)+2';
 
 
 export const runtime = {
@@ -36,6 +40,7 @@ export const runtime = {
   gTime: 0,
   heightCache: null,
   zMin: 0, zMax: 1,
+  flowMap: null, // hydraulic erosion's flow-accumulation map (for the river overlay)
 
   // foliage counters
   treeCount: 0, rockCount: 0,

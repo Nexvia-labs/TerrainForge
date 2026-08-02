@@ -1,6 +1,7 @@
 import { STATE, SURF, runtime } from '../core/state.js';
 import { getEquationFn } from './equations.js';
 import { sn } from './noise.js';
+import { erode, erodeThermally, erodeHydraulic } from './erosion.js';
 
 export function buildHeightmap() {
   const res = STATE.res;
@@ -39,8 +40,26 @@ export function buildHeightmap() {
   }
   
   let result = hmap;
-  if (STATE.erosion > 0.01) result = erode(hmap, GRID, STATE.erosion);
-
+  runtime.flowMap = null;
+  const etype = STATE.erosionType;
+  if (etype === 'laplacian' && STATE.erosion > 0.01) {
+    result = erode(hmap, GRID, STATE.erosion);
+  } else if (etype === 'thermal') {
+    result = erodeThermally(hmap, GRID, STATE.talusAngle, STATE.thermIters);
+  } else if (etype === 'hydraulic') {
+    const r = erodeHydraulic(hmap, GRID, {
+      droplets: STATE.droplets, inertia: STATE.inertia,
+      eroRate: STATE.eroRate, depRate: STATE.depRate, evap: STATE.evap
+    });
+    result = r.hmap; runtime.flowMap = r.flowMap;
+  } else if (etype === 'both') {
+    result = erodeThermally(hmap, GRID, STATE.talusAngle, Math.floor(STATE.thermIters * .5));
+    const r = erodeHydraulic(result, GRID, {
+      droplets: Math.floor(STATE.droplets * .5), inertia: STATE.inertia,
+      eroRate: STATE.eroRate, depRate: STATE.depRate, evap: STATE.evap
+    });
+    result = r.hmap; runtime.flowMap = r.flowMap;
+  }
 
   runtime.zMin = Infinity; runtime.zMax = -Infinity;
   for (let i = 0; i < VC; i++) {
@@ -48,23 +67,6 @@ export function buildHeightmap() {
     if (result[i] > runtime.zMax) runtime.zMax = result[i];
   }
   return { hmap: result, GRID, s };
-}
-
-
-export function erode(hmap, G, str) {
-  const out = new Float32Array(hmap.length);
-  for (let j = 0; j < G; j++) {
-    for (let i = 0; i < G; i++) {
-      const c = hmap[j * G + i];
-      const n = j > 0 ? hmap[(j - 1) * G + i] : c;
-      const s2 = j < G - 1 ? hmap[(j + 1) * G + i] : c;
-      const w = i > 0 ? hmap[j * G + i - 1] : c;
-      const e = i < G - 1 ? hmap[j * G + i + 1] : c;
-      const laplace = (n + s2 + w + e - 4 * c) * .25;
-      out[j * G + i] = c + laplace * str * .3;
-    }
-  }
-  return out;
 }
 
 /**
@@ -124,7 +126,26 @@ export function buildHeightmapChunked(cb, onProgress) {
     }
 
     let result = hmap;
-    if (STATE.erosion > 0.01) result = erode(hmap, GRID, STATE.erosion);
+    runtime.flowMap = null;
+    const etype = STATE.erosionType;
+    if (etype === 'laplacian' && STATE.erosion > 0.01) {
+      result = erode(hmap, GRID, STATE.erosion);
+    } else if (etype === 'thermal') {
+      result = erodeThermally(hmap, GRID, STATE.talusAngle, STATE.thermIters);
+    } else if (etype === 'hydraulic') {
+      const r = erodeHydraulic(hmap, GRID, {
+        droplets: STATE.droplets, inertia: STATE.inertia,
+        eroRate: STATE.eroRate, depRate: STATE.depRate, evap: STATE.evap
+      });
+      result = r.hmap; runtime.flowMap = r.flowMap;
+    } else if (etype === 'both') {
+      result = erodeThermally(hmap, GRID, STATE.talusAngle, Math.floor(STATE.thermIters * .5));
+      const r = erodeHydraulic(result, GRID, {
+        droplets: Math.floor(STATE.droplets * .5), inertia: STATE.inertia,
+        eroRate: STATE.eroRate, depRate: STATE.depRate, evap: STATE.evap
+      });
+      result = r.hmap; runtime.flowMap = r.flowMap;
+    }
 
     runtime.zMin = Infinity; runtime.zMax = -Infinity;
     for (let i = 0; i < VC; i++) {

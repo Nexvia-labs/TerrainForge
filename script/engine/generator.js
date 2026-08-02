@@ -8,6 +8,7 @@ import { reseedNoise } from './noise.js';
 import { updateStats } from '../utils/stats.js';
 import { updateDNA } from '../utils/seed.js';
 import { toast } from '../utils/toast.js';
+import { applyFlowMapOverlay } from './erosion.js';
 
 export function generate(showProgress) {
   if (runtime.generating) return;
@@ -18,7 +19,9 @@ export function generate(showProgress) {
     setProgress(10, 'Building heightmap…');
     reseedNoise(STATE.seed);
 
-    
+    // Large resolutions build asynchronously in row-chunks (yielding to the
+    // browser between ticks) so the tab doesn't freeze; smaller ones just
+    // run the plain synchronous build.
     if (STATE.res >= 192) {
       buildHeightmapChunked(function (data) {
         runtime.heightCache = data;
@@ -51,6 +54,7 @@ function continueGenerate(data) {
 
       setTimeout(function () {
         spawnFoliage(data, slopes);
+        if (STATE.showFlowMap && runtime.flowMap) applyFlowMapOverlay();
         setProgress(100, 'Done!');
         updateStats();
         updateDNA();

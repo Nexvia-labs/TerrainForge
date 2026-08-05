@@ -137,6 +137,36 @@ export function exportOBJ() {
   }
 }
 
+// ── 16-BIT HEIGHTMAP EXPORT (R16 via 2-channel PNG trick) ─────────
+
+export function exportHeightmap16() {
+  if (!runtime.heightCache) { toast('No Terrain', 'Generate a terrain first.'); return; }
+  const hmap = runtime.heightCache.hmap, GRID = runtime.heightCache.GRID;
+  const res = GRID - 1;
+  // Use an offscreen canvas at the heightmap's native resolution
+  const cv = document.createElement('canvas');
+  cv.width = GRID; cv.height = GRID;
+  const ctx = cv.getContext('2d');
+  const img = ctx.createImageData(GRID, GRID);
+  const zRng = runtime.zMax - runtime.zMin || 1;
+  for (let k = 0; k < GRID * GRID; k++) {
+    const hn = Math.max(0, Math.min(1, (hmap[k] - runtime.zMin) / zRng));
+    // Encode as 16-bit split across R (high byte) + G (low byte)
+    const v16 = Math.round(hn * 65535);
+    const hi = v16 >> 8, lo = v16 & 0xFF;
+    img.data[k * 4 + 0] = hi;   // R = high byte
+    img.data[k * 4 + 1] = lo;   // G = low byte
+    img.data[k * 4 + 2] = 0;    // B unused
+    img.data[k * 4 + 3] = 255;  // A = fully opaque
+  }
+  ctx.putImageData(img, 0, 0);
+  const lnk = document.createElement('a');
+  lnk.download = 'hm16_seed' + STATE.seed + '_' + GRID + 'x' + GRID + '.png';
+  lnk.href = cv.toDataURL('image/png');
+  lnk.click();
+  toast('16-bit Heightmap', 'R=high byte, G=low byte. Decode in engine: height = (R*256+G)/65535 × maxH');
+}
+
 // ── SPLATMAP (RGBA weightmap) EXPORT ────────────────────────────
 // R=sand/beach, G=grass/forest, B=rock, A=snow
 

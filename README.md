@@ -1,7 +1,7 @@
 <a id="top"></a>
 <div align="center">
 
-<img src="assets/Readme/banner.png" alt="TerrainForge-Lite banner" width="100%">
+<img src="assets/Readme/banner-v2.5.0.png" alt="TerrainForge-Lite banner" width="100%">
 
 # ⛰️ TerrainForge‑Lite
 

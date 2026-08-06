@@ -30,6 +30,7 @@
   <button class="btn sm" id="btn-export">↓ PNG</button>
   <button class="btn sm pu" id="btn-export-obj">↓ OBJ</button>
   <button class="btn sm pu" id="btn-export-glb">↓ GLB</button>
+  <button class="btn sm" id="btn-export-hm16" title="16-bit R16 Heightmap PNG">↓ HM16</button>
   <button class="btn sm" id="btn-export-splat" title="RGBA Splatmap">↓ Splat</button>
 </div>
 
@@ -65,6 +66,7 @@
     <button class="tab-btn" data-tab="biomes">🌿 Biomes</button>
     <button class="tab-btn" data-tab="layers">📐 Layers</button>
     <button class="tab-btn" data-tab="color">🎨 Color</button>
+    <button class="tab-btn" data-tab="erosion">⛏ Erosion</button>
     <button class="tab-btn" data-tab="nodes">⚡ Nodes</button>
     <button class="tab-btn" data-tab="seed">🔑 Seed</button>
   </div>
@@ -108,9 +110,6 @@
       <div class="sg"><span class="slbl">Resolution</span>
         <input type="range" id="sl-res" min="64" max="256" step="32" value="128">
         <span class="svs" id="v-res">128</span></div>
-      <div class="sg"><span class="slbl">Erosion</span>
-        <input type="range" id="sl-ero" min="0" max="1" step="0.01" value="0">
-        <span class="svs" id="v-ero">0.00</span></div>
     </div>
     <div class="cr" style="margin-top:4px">
       <div class="tog-wrap" id="tog-wire"><div class="tog" id="tw-tog"></div><span class="tog-lbl">Wireframe</span></div>
@@ -238,6 +237,55 @@
     </div>
   </div>
 
+  <!-- EROSION TAB -->
+  <div class="tab-pane" id="tab-erosion">
+    <div class="ph">Erosion Algorithm</div>
+    <div class="ero-type-row" id="ero-type-row">
+      <button class="ero-type-btn active" data-etype="none">None</button>
+      <button class="ero-type-btn" data-etype="laplacian">Smooth</button>
+      <button class="ero-type-btn" data-etype="thermal">Thermal</button>
+      <button class="ero-type-btn" data-etype="hydraulic">Hydraulic</button>
+      <button class="ero-type-btn" data-etype="both">Both</button>
+      <span class="info-chip" id="ero-chip">Off</span>
+    </div>
+    <div class="div"></div>
+    <div class="cr" id="ero-laplacian-controls">
+      <div class="sg"><span class="slbl">Smooth Str</span>
+        <input type="range" id="sl-ero" min="0" max="1" step="0.01" value="0">
+        <span class="svs" id="v-ero">0.00</span></div>
+    </div>
+    <div class="cr" id="ero-hydraulic-controls" style="display:none">
+      <div class="sg"><span class="slbl">Droplets</span>
+        <input type="range" id="sl-droplets" min="500" max="15000" step="500" value="3000">
+        <span class="svs" id="v-droplets">3000</span></div>
+      <div class="sg"><span class="slbl">Inertia</span>
+        <input type="range" id="sl-inertia" min="0.01" max="0.9" step="0.01" value="0.05">
+        <span class="svs" id="v-inertia">0.05</span></div>
+      <div class="sg"><span class="slbl">Erosion Rate</span>
+        <input type="range" id="sl-eroRate" min="0.01" max="1" step="0.01" value="0.3">
+        <span class="svs" id="v-eroRate">0.30</span></div>
+      <div class="sg"><span class="slbl">Deposit Rate</span>
+        <input type="range" id="sl-depRate" min="0.01" max="1" step="0.01" value="0.3">
+        <span class="svs" id="v-depRate">0.30</span></div>
+      <div class="sg"><span class="slbl">Evaporation</span>
+        <input type="range" id="sl-evap" min="0.001" max="0.1" step="0.001" value="0.02">
+        <span class="svs" id="v-evap">0.020</span></div>
+    </div>
+    <div class="cr" id="ero-thermal-controls" style="display:none">
+      <div class="sg"><span class="slbl">Talus Angle°</span>
+        <input type="range" id="sl-talus" min="5" max="80" step="1" value="30">
+        <span class="svs" id="v-talus">30</span></div>
+      <div class="sg"><span class="slbl">Iterations</span>
+        <input type="range" id="sl-thermiters" min="5" max="40" step="5" value="20">
+        <span class="svs" id="v-thermiters">20</span></div>
+    </div>
+    <div class="div"></div>
+    <div class="cr">
+      <div class="tog-wrap" id="tog-flowmap"><div class="tog" id="tfm-tog"></div><span class="tog-lbl">Show Flow Map</span></div>
+      <span class="info-chip">Overlay river paths from hydraulic erosion</span>
+    </div>
+  </div>
+
   <!-- NODES TAB -->
   <div class="tab-pane" id="tab-nodes">
     <div class="ph">Visual Node Graph — Equation Builder</div>
@@ -307,6 +355,8 @@
       <span class="badge">Water & Rivers</span>
       <span class="badge">Seed Sharing</span>
       <span class="badge">Equation Layers</span>
+      <span class="badge">Hydraulic Erosion</span>
+      <span class="badge">16-bit HM Export</span>
       <span class="badge">GLB Export</span>
       <span class="badge">Node Graph</span>
     </div>

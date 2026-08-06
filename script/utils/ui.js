@@ -11,10 +11,11 @@ import { generate } from '../engine/generator.js';
 import { addLayer } from '../environment/layers.js';
 import { buildTerrainMesh } from '../engine/terrain-mesh.js';
 import { buildWater } from '../environment/water.js';
-import { trigExport, exportOBJ, exportGLB, exportSplatmap } from './export.js';
+import { trigExport, exportOBJ, exportGLB, exportSplatmap, exportHeightmap16 } from './export.js';
 import { toast } from './toast.js';
 import { updateDNA, buildMapCode, loadMapCode } from './seed.js';
 import { NG } from './nodegraph.js';
+import { applyFlowMapOverlay } from '../engine/erosion.js';
 import { showHome, showVisualizer, showSaveModal, hideSaveModal, doSave } from './projects.js';
 
 // ── STATE → UI ───────────────────────────────────────────────────
@@ -30,6 +31,14 @@ export function syncAllUI() {
   sv('sl-rough', STATE.rough); svt('v-rough', STATE.rough.toFixed(2));
   sv('sl-res', STATE.res); svt('v-res', STATE.res);
   sv('sl-ero', STATE.erosion); svt('v-ero', STATE.erosion.toFixed(2));
+  sv('sl-droplets', STATE.droplets); svt('v-droplets', STATE.droplets);
+  sv('sl-inertia', STATE.inertia); svt('v-inertia', STATE.inertia.toFixed(2));
+  sv('sl-eroRate', STATE.eroRate); svt('v-eroRate', STATE.eroRate.toFixed(2));
+  sv('sl-depRate', STATE.depRate); svt('v-depRate', STATE.depRate.toFixed(2));
+  sv('sl-evap', STATE.evap); svt('v-evap', STATE.evap.toFixed(3));
+  sv('sl-talus', STATE.talusAngle); svt('v-talus', STATE.talusAngle);
+  sv('sl-thermiters', STATE.thermIters); svt('v-thermiters', STATE.thermIters);
+  updateErosionTypeUI(STATE.erosionType);
   sv('sl-sea', STATE.seaLevel); svt('v-sea', STATE.seaLevel.toFixed(2));
   sv('sl-walpha', STATE.wAlpha); svt('v-walpha', STATE.wAlpha.toFixed(2));
   sv('sl-wsp', STATE.wSpeed); svt('v-wsp', STATE.wSpeed.toFixed(2));
@@ -55,6 +64,7 @@ export function syncAllUI() {
   $('tc-tog').classList.toggle('on', STATE.autoRotate);
   $('tw-tog').classList.toggle('on', STATE.wireframe);
   $('tf-tog').classList.toggle('on', STATE.flatShade);
+  $('tfm-tog').classList.toggle('on', STATE.showFlowMap);
 }
 
 // ── TOGGLE SWITCH HELPER ──────────────────────────────────────────
@@ -68,6 +78,25 @@ function tog(wrapId, togId, key, cb) {
     if (cb) cb(STATE[key]);
   });
   togEl.classList.toggle('on', STATE[key]);
+}
+
+// ── EROSION TYPE UI HELPER ─────────────────────────────────────────
+// Shared by the type-button click handler and syncAllUI so the active
+// button, visible control group, and status chip can never drift out
+// of sync with STATE.erosionType (e.g. after loading a saved project).
+
+function updateErosionTypeUI(etype) {
+  document.querySelectorAll('.ero-type-btn').forEach(function (b) {
+    b.classList.toggle('active', b.dataset.etype === etype);
+  });
+  const lapC = $('ero-laplacian-controls');
+  const hydC = $('ero-hydraulic-controls');
+  const thrC = $('ero-thermal-controls');
+  if (lapC) lapC.style.display = (etype === 'laplacian' || etype === 'none') ? '' : 'none';
+  if (hydC) hydC.style.display = (etype === 'hydraulic' || etype === 'both') ? '' : 'none';
+  if (thrC) thrC.style.display = (etype === 'thermal' || etype === 'both') ? '' : 'none';
+  const labels = { none: 'Off', laplacian: 'Laplacian Smooth', thermal: 'Thermal Rockslide', hydraulic: 'Hydraulic Droplets', both: 'Thermal + Hydraulic' };
+  const chip = $('ero-chip'); if (chip) chip.textContent = labels[etype] || etype;
 }
 
 // ── BIND ALL EVENTS ───────────────────────────────────────────────
@@ -197,6 +226,7 @@ export function bindEvents() {
   $('btn-export').addEventListener('click', trigExport);
   $('btn-export-obj').addEventListener('click', exportOBJ);
   $('btn-export-glb').addEventListener('click', exportGLB);
+  $('btn-export-hm16').addEventListener('click', exportHeightmap16);
   $('btn-export-splat').addEventListener('click', exportSplatmap);
   $('btn-new-proj').addEventListener('click', function () {
     runtime.currentProjectId = null;
@@ -215,6 +245,39 @@ export function bindEvents() {
     if (e.key === 'Escape') hideSaveModal();
   });
   $('save-modal').addEventListener('click', function (e) { if (e.target === $('save-modal')) hideSaveModal(); });
+
+  // Erosion type selector
+  document.querySelectorAll('.ero-type-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      STATE.erosionType = btn.dataset.etype;
+      updateErosionTypeUI(STATE.erosionType);
+    });
+  });
+
+  // Erosion-specific sliders
+  const eroSliders = [
+    ['sl-droplets', 'droplets', 0], ['sl-inertia', 'inertia', 2],
+    ['sl-eroRate', 'eroRate', 2], ['sl-depRate', 'depRate', 2], ['sl-evap', 'evap', 3],
+    ['sl-talus', 'talusAngle', 0], ['sl-thermiters', 'thermIters', 0]
+  ];
+  eroSliders.forEach(function (s) {
+    const el = $(s[0]); if (!el) return;
+    el.addEventListener('input', function () {
+      STATE[s[1]] = parseFloat(el.value);
+      const vEl = $('v-' + s[0].replace('sl-', ''));
+      if (vEl) vEl.textContent = parseFloat(el.value).toFixed(s[2]);
+    });
+  });
+
+  // Flow map toggle
+  tog('tog-flowmap', 'tfm-tog', 'showFlowMap', function (v) {
+    if (!v) {
+      // Restore original vertex colors if flow map removed
+      if (runtime.heightCache) buildTerrainMesh(runtime.heightCache);
+    } else {
+      if (runtime.flowMap) applyFlowMapOverlay();
+    }
+  });
 
   // Node graph init
   NG.init();
